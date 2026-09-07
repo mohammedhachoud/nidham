@@ -1,4 +1,4 @@
-/* Global Resets & Typography */
+/* Global Resets & Typography for Soft Inspirational Theme */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -24,7 +24,7 @@ html, body {
   flex-direction: column;
 }
 
-/* Custom Scrollbars */
+/* Custom Soft Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -43,12 +43,20 @@ html, body {
   background: var(--text-muted);
 }
 
-/* Base Typography */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
+/* Base Editorial Typography */
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+h4, h5, h6 {
+  font-family: var(--font-sans);
   color: var(--text-primary);
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 p {
@@ -56,13 +64,13 @@ p {
 }
 
 a {
-  color: var(--accent-primary);
+  color: var(--accent-sage);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--accent-primary-hover);
+  color: var(--accent-sage-hover);
 }
 
 button {
@@ -76,7 +84,7 @@ button {
 }
 
 input, textarea, select {
-  font-family: inherit;
+  font-family: var(--font-sans);
   font-size: inherit;
   color: var(--text-primary);
   background-color: var(--bg-input);
@@ -84,21 +92,28 @@ input, textarea, select {
   border-radius: var(--radius-md);
   padding: 8px 12px;
   outline: none;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 input:focus, textarea:focus, select:focus {
-  border-color: var(--border-focus);
-  background-color: var(--bg-input-focus);
-  box-shadow: 0 0 0 2px var(--accent-primary-glow);
+  border-color: var(--accent-sage);
+  box-shadow: 0 0 0 3px rgba(82, 121, 94, 0.12);
 }
 
 code, pre, .font-mono {
   font-family: var(--font-mono);
 }
 
+.font-script {
+  font-family: var(--font-script);
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
 /* Selection */
 ::selection {
-  background: var(--accent-primary);
-  color: #FFFFFF;
+  background: var(--accent-sage-soft);
+  color: var(--text-primary);
 }

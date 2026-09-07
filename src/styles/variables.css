@@ -1,134 +1,81 @@
 :root {
-  /* Dark Mode Default (Obsidian & Deep Slate) */
-  --bg-primary: #0B0F17;
-  --bg-secondary: #111827;
-  --bg-tertiary: #172133;
-  --bg-card: rgba(19, 27, 42, 0.85);
-  --bg-card-hover: rgba(26, 38, 59, 0.95);
-  --bg-card-active: #1D2A40;
-  --bg-glass: rgba(15, 23, 42, 0.7);
-  --bg-input: #0F172A;
-  --bg-input-focus: #131E33;
+  /* Soft, Warm, Inspirational Aesthetic Theme */
+  --bg-primary: #F8F8F5;
+  --bg-secondary: #F2F3EE;
+  --bg-tertiary: #EBECE6;
+  --bg-card: #FFFFFF;
+  --bg-card-quote: #FAF3F3;
+  --bg-card-hover: #FCFCFA;
+  --bg-input: #FFFFFF;
+  --bg-input-focus: #FFFFFF;
+  --bg-glass: rgba(248, 248, 245, 0.92);
 
   /* Borders & Dividers */
-  --border-subtle: #1E293B;
-  --border-light: #2A3852;
-  --border-focus: #3B82F6;
-  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-subtle: #EAEBE6;
+  --border-light: #E0E2DC;
+  --border-focus: #557A61;
+  --border-quote: #F0E3E3;
 
   /* Typography */
-  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-serif: 'Playfair Display', 'Newsreader', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-script: 'Caveat', cursive;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --text-inverse: #0B0F17;
+  /* Text Colors */
+  --text-primary: #27322A;
+  --text-secondary: #636E66;
+  --text-muted: #8E9891;
+  --text-accent: #4A6E55;
 
-  /* Brand Accents */
-  --accent-primary: #3B82F6;
-  --accent-primary-hover: #2563EB;
-  --accent-primary-glow: rgba(59, 130, 246, 0.25);
-  --accent-secondary: #6366F1;
+  /* Botanical & Muted Brand Accents */
+  --accent-sage: #52795E;
+  --accent-sage-hover: #40604A;
+  --accent-sage-soft: #DCE4DD;
+  --accent-sage-bg: #EFF4F0;
+
+  --accent-rose: #C87A7A;
+  --accent-rose-soft: #F6E7E7;
+  --accent-rose-bg: #FAF3F3;
+
+  --accent-periwinkle: #6D7CA8;
+  --accent-periwinkle-soft: #E2E6F2;
+  --accent-periwinkle-bg: #F0F3F9;
+
+  --accent-sand: #C29668;
+  --accent-sand-soft: #F3EAE0;
+  --accent-sand-bg: #F9F5F0;
 
   /* Semantic Status Colors */
-  --status-success: #10B981;
-  --status-success-bg: rgba(16, 185, 129, 0.12);
-  --status-success-border: rgba(16, 185, 129, 0.28);
+  --status-success: #52795E;
+  --status-success-bg: #EFF4F0;
+  --status-success-border: #DCE4DD;
 
-  --status-warning: #F59E0B;
-  --status-warning-bg: rgba(245, 158, 11, 0.12);
-  --status-warning-border: rgba(245, 158, 11, 0.28);
+  --status-warning: #C29668;
+  --status-warning-bg: #F9F5F0;
+  --status-warning-border: #F3EAE0;
 
-  --status-danger: #EF4444;
-  --status-danger-bg: rgba(239, 68, 68, 0.12);
-  --status-danger-border: rgba(239, 68, 68, 0.28);
+  --status-danger: #C87A7A;
+  --status-danger-bg: #FAF3F3;
+  --status-danger-border: #F6E7E7;
 
-  --status-info: #06B6D4;
-  --status-info-bg: rgba(6, 182, 212, 0.12);
-  --status-info-border: rgba(6, 182, 212, 0.28);
-
-  --status-purple: #8B5CF6;
-  --status-purple-bg: rgba(139, 92, 246, 0.12);
-  --status-purple-border: rgba(139, 92, 246, 0.28);
-
-  /* Spacing */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --space-2xl: 48px;
+  --status-info: #6D7CA8;
+  --status-info-bg: #F0F3F9;
+  --status-info-border: #E2E6F2;
 
   /* Radii */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px -1px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.55);
-  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.2);
+  --shadow-sm: 0 1px 3px rgba(39, 50, 42, 0.04);
+  --shadow-md: 0 4px 14px rgba(39, 50, 42, 0.06);
+  --shadow-lg: 0 10px 30px rgba(39, 50, 42, 0.08);
 
   /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Polished Light Theme */
-.light-theme {
-  --bg-primary: #F8FAFC;
-  --bg-secondary: #FFFFFF;
-  --bg-tertiary: #F1F5F9;
-  --bg-card: rgba(255, 255, 255, 0.95);
-  --bg-card-hover: #FFFFFF;
-  --bg-card-active: #E2E8F0;
-  --bg-glass: rgba(255, 255, 255, 0.85);
-  --bg-input: #F8FAFC;
-  --bg-input-focus: #FFFFFF;
-
-  --border-subtle: #E2E8F0;
-  --border-light: #CBD5E1;
-  --border-focus: #2563EB;
-  --border-glass: rgba(0, 0, 0, 0.08);
-
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #94A3B8;
-  --text-inverse: #FFFFFF;
-
-  --accent-primary: #2563EB;
-  --accent-primary-hover: #1D4ED8;
-  --accent-primary-glow: rgba(37, 99, 235, 0.15);
-  --accent-secondary: #4F46E5;
-
-  --status-success: #059669;
-  --status-success-bg: rgba(5, 150, 105, 0.1);
-  --status-success-border: rgba(5, 150, 105, 0.25);
-
-  --status-warning: #D97706;
-  --status-warning-bg: rgba(217, 119, 6, 0.1);
-  --status-warning-border: rgba(217, 119, 6, 0.25);
-
-  --status-danger: #DC2626;
-  --status-danger-bg: rgba(220, 38, 38, 0.1);
-  --status-danger-border: rgba(220, 38, 38, 0.25);
-
-  --status-info: #0284C7;
-  --status-info-bg: rgba(2, 132, 199, 0.1);
-  --status-info-border: rgba(2, 132, 199, 0.25);
-
-  --status-purple: #7C3AED;
-  --status-purple-bg: rgba(124, 58, 237, 0.1);
-  --status-purple-border: rgba(124, 58, 237, 0.25);
-
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px -1px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.12);
-  --shadow-glow: 0 0 16px rgba(37, 99, 235, 0.12);
+  --transition-fast: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 260ms cubic-bezier(0.4, 0, 0.2, 1);
 }

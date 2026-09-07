@@ -1,17 +1,17 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import {
-  LayoutDashboard,
-  CalendarCheck,
-  CalendarRange,
-  Layers,
-  GraduationCap,
-  Languages,
+  Home,
+  Sun,
+  Calendar,
+  Compass,
+  BookOpen,
+  BarChart3,
   TrendingUp,
-  Bookmark,
-  Archive,
+  Inbox,
+  Link,
   Settings,
-  Sparkles,
+  Leaf,
   X
 } from 'lucide-react';
 import type { NavigationTab } from '../../types';
@@ -21,26 +21,23 @@ export const Sidebar: React.FC = () => {
     activeTab,
     setActiveTab,
     isMobileMenuOpen,
-    setMobileMenuOpen,
-    today,
-    currentCycle,
-    computedStats
+    setMobileMenuOpen
   } = useApp();
 
-  const navItems: { tab: NavigationTab; label: string; icon: React.ReactNode; badge?: string }[] = [
-    { tab: 'command-center', label: 'Command Center', icon: <LayoutDashboard size={18} /> },
-    { tab: 'today', label: 'Today', icon: <CalendarCheck size={18} />, badge: `D${today.dayNumber}` },
-    { tab: 'week', label: 'This Week', icon: <CalendarRange size={18} />, badge: `W${today.weekNumber}` },
-    { tab: 'cycle', label: 'Current Cycle', icon: <Layers size={18} />, badge: `C${currentCycle.number}` },
-    { tab: 'learning-projects', label: 'Learning + Projects', icon: <GraduationCap size={18} /> },
-    { tab: 'ielts', label: 'IELTS', icon: <Languages size={18} />, badge: `${computedStats.weeklyIeltsCount}/7` },
+  const navItems: { tab: NavigationTab; label: string; icon: React.ReactNode }[] = [
+    { tab: 'command-center', label: 'Command Center', icon: <Home size={18} /> },
+    { tab: 'today', label: 'Today', icon: <Sun size={18} /> },
+    { tab: 'week', label: 'This Week', icon: <Calendar size={18} /> },
+    { tab: 'cycle', label: 'Current Cycle', icon: <Compass size={18} /> },
+    { tab: 'learning-projects', label: 'Learning + Projects', icon: <BookOpen size={18} /> },
+    { tab: 'ielts', label: 'IELTS', icon: <BarChart3 size={18} /> },
     { tab: 'review', label: 'Review + Progress', icon: <TrendingUp size={18} /> }
   ];
 
   const secondaryNavItems: { tab: NavigationTab; label: string; icon: React.ReactNode }[] = [
-    { tab: 'resources', label: 'Resources', icon: <Bookmark size={16} /> },
-    { tab: 'archive', label: 'Archive', icon: <Archive size={16} /> },
-    { tab: 'settings', label: 'Settings', icon: <Settings size={16} /> }
+    { tab: 'archive', label: 'Archive', icon: <Inbox size={17} /> },
+    { tab: 'resources', label: 'Resources', icon: <Link size={17} /> },
+    { tab: 'settings', label: 'Settings', icon: <Settings size={17} /> }
   ];
 
   const handleNavClick = (tab: NavigationTab) => {
@@ -55,12 +52,12 @@ export const Sidebar: React.FC = () => {
       )}
       <aside className={`app-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
-          <div className="brand-title">
-            <div className="card-title-icon" style={{ background: 'var(--accent-primary)', color: '#FFFFFF' }}>
-              <Sparkles size={16} />
+          <div className="brand-header-group">
+            <Leaf className="brand-leaf-icon" />
+            <div>
+              <div className="brand-name">A Better You</div>
+              <div className="brand-motto">Discipline Creates Freedom</div>
             </div>
-            <span>Nidham</span>
-            <span className="brand-badge">90-Day OS</span>
           </div>
           {isMobileMenuOpen && (
             <button className="btn btn-ghost btn-sm" onClick={() => setMobileMenuOpen(false)}>
@@ -70,7 +67,6 @@ export const Sidebar: React.FC = () => {
         </div>
 
         <nav className="sidebar-nav">
-          <div className="nav-section-title">Core Operating Views</div>
           {navItems.map(item => (
             <button
               key={item.tab}
@@ -79,11 +75,11 @@ export const Sidebar: React.FC = () => {
             >
               {item.icon}
               <span>{item.label}</span>
-              {item.badge && <span className="nav-item-badge">{item.badge}</span>}
             </button>
           ))}
 
-          <div className="nav-section-title" style={{ marginTop: '12px' }}>System Archives</div>
+          <div className="sidebar-divider" />
+
           {secondaryNavItems.map(item => (
             <button
               key={item.tab}
@@ -96,19 +92,17 @@ export const Sidebar: React.FC = () => {
           ))}
         </nav>
 
-        <div className="sidebar-footer">
-          <div style={{ padding: '8px 10px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-              <span>Cycle {currentCycle.number} Progress</span>
-              <span className="font-mono">{computedStats.cycleDaysCompleted}/{computedStats.cycleTotalDays}d</span>
-            </div>
-            <div className="progress-bar-container" style={{ height: '5px' }}>
-              <div
-                className="progress-bar-fill fill-blue"
-                style={{ width: `${Math.round((computedStats.cycleDaysCompleted / computedStats.cycleTotalDays) * 100)}%` }}
-              />
-            </div>
+        {/* Bottom Sidebar Misty Mountain Landscape Artwork */}
+        <div className="sidebar-footer-art">
+          <img
+            src="/images/serene_mountain_lake.jpg"
+            alt="Serene mountain lake reflection"
+            className="sidebar-landscape-img"
+          />
+          <div className="sidebar-footer-quote">
+            A calmer mind<br />A brighter future
           </div>
+          <div style={{ width: '28px', height: '1px', background: 'var(--accent-sage)', opacity: 0.35, marginTop: '6px' }} />
         </div>
       </aside>
     </>
