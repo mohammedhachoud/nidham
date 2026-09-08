@@ -17,7 +17,6 @@ import {
   Plus,
   ArrowRight,
   Check,
-  BookOpen,
   Sparkles,
   Heart,
   Sun

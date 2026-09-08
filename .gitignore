@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Tauri / Rust build artefacts (can be hundreds of MB)
+src-tauri/target/
+src-tauri/gen/
