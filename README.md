@@ -56,16 +56,16 @@ Nidham is available as a **native Windows desktop application** built with [Taur
 
 ### 📦 Pre-Built Release Installers
 
-The compiled production installers are located in the local release bundle directory:
+The production installers are committed directly to this repository under the [`releases/`](./releases) directory:
 
-📁 **Release Folder**: [`src-tauri/target/release/bundle/`](file:///c:/Users/HM/Desktop/Nidham/src-tauri/target/release/bundle/)
+📁 **Repository Release Folder**: [`releases/`](./releases)
 
 | Format | Installer File | Size | Description |
 |--------|---------------|------|-------------|
-| **Windows Setup (`.exe`)** | [`Nidham_0.1.0_x64-setup.exe`](file:///c:/Users/HM/Desktop/Nidham/src-tauri/target/release/bundle/nsis/Nidham_0.1.0_x64-setup.exe) | **~3.3 MB** | Standard Windows NSIS installer with desktop shortcut & start menu integration |
-| **Windows MSI Package (`.msi`)** | [`Nidham_0.1.0_x64_en-US.msi`](file:///c:/Users/HM/Desktop/Nidham/src-tauri/target/release/bundle/msi/Nidham_0.1.0_x64_en-US.msi) | **~4.3 MB** | Windows Installer package (ideal for enterprise / unattended deployment) |
+| **Windows Setup (`.exe`)** | [**`Nidham_0.1.0_x64-setup.exe`**](./releases/Nidham_0.1.0_x64-setup.exe) | **~3.3 MB** | Standard Windows NSIS installer with desktop shortcut & start menu integration *(Recommended)* |
+| **Windows MSI Package (`.msi`)** | [**`Nidham_0.1.0_x64_en-US.msi`**](./releases/Nidham_0.1.0_x64_en-US.msi) | **~4.3 MB** | Windows Installer package (ideal for enterprise / unattended deployment) |
 
-> 💡 **Quick Run:** You can directly run [`Nidham_0.1.0_x64-setup.exe`](file:///c:/Users/HM/Desktop/Nidham/src-tauri/target/release/bundle/nsis/Nidham_0.1.0_x64-setup.exe) to install Nidham natively on Windows 10 or 11. All your data, dark mode preferences, and timers will run offline in a dedicated native desktop window.
+> 💡 **Quick Install:** Simply download and run [`Nidham_0.1.0_x64-setup.exe`](./releases/Nidham_0.1.0_x64-setup.exe) to install Nidham natively on Windows 10 or 11. All your data, dark mode preferences, and timers will run offline in a dedicated native desktop window.
 
 ### 🔨 Desktop CLI Commands
 
