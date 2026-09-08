@@ -3,7 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { Archive, History, FileText } from 'lucide-react';
 
 export const ArchiveView: React.FC = () => {
-  const { outputs } = useApp();
+  const { weeks, outputs } = useApp();
+  const completedWeeks = weeks.filter(w => w.review !== undefined);
 
   return (
     <div className="layout-column animate-fade-in">
@@ -35,18 +36,22 @@ export const ArchiveView: React.FC = () => {
               <History size={16} style={{ color: 'var(--status-success)' }} />
               Completed Weeks
             </span>
-            <span className="badge badge-green font-mono">2 Weeks</span>
+            <span className="badge badge-green font-mono">{completedWeeks.length} Weeks</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-              <span>Week 1 — Foundation Baseline</span>
-              <span className="badge badge-neutral">Archived</span>
+          {completedWeeks.length === 0 ? (
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+              No completed weeks archived yet. Currently in Week 1.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem' }}>
+              {completedWeeks.map(w => (
+                <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span>Week {w.weekNumber} — {w.mission}</span>
+                  <span className="badge badge-neutral">Archived</span>
+                </div>
+              ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-              <span>Week 2 — Chunking Strategies</span>
-              <span className="badge badge-neutral">Archived</span>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="card">

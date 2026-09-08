@@ -15,9 +15,12 @@ import type {
   IELTSErrorRecord,
   SystemRisk,
   ResourceItem,
-  WeeklyReview
+  WeeklyReview,
+  UserProfile,
+  CycleTask
 } from '../types';
 import {
+  INITIAL_PROFILE,
   INITIAL_CYCLES,
   INITIAL_WEEKS,
   INITIAL_TODAY,
@@ -28,7 +31,10 @@ import {
   INITIAL_IELTS_SESSIONS,
   INITIAL_IELTS_ERRORS,
   INITIAL_RISKS,
-  INITIAL_RESOURCES
+  INITIAL_RESOURCES,
+  getTodayDayNumber,
+  programDayToDate,
+  fmtFull
 } from '../data/initialData';
 
 interface AppContextType {
@@ -94,6 +100,8 @@ interface AppContextType {
   togglePrayer: (index: number) => void;
   toggleFajr: () => void;
   toggleQuran: () => void;
+  toggleBaqarahThird: (index: number) => void;
+  toggleAdhkar: (type: 'morning' | 'evening') => void;
   toggleTraining: () => void;
   toggleScreenTime: () => void;
   updateQuickNotes: (notes: string) => void;
@@ -113,6 +121,22 @@ interface AppContextType {
 
   addResource: (res: Omit<ResourceItem, 'id' | 'dateAdded'>) => void;
 
+  // Profile & Settings
+  userProfile: UserProfile;
+  updateUserProfile: (updates: Partial<UserProfile>) => void;
+
+  // Cycle Management
+  updateCycle: (cycleNumber: number, updates: Partial<CycleData>) => void;
+  addCycleObjective: (cycleNumber: number, objective: string) => void;
+  editCycleObjective: (cycleNumber: number, index: number, newObjective: string) => void;
+  deleteCycleObjective: (cycleNumber: number, index: number) => void;
+  addCycleOutput: (cycleNumber: number, output: string) => void;
+  toggleCycleOutput: (cycleNumber: number, outputTitle: string) => void;
+  deleteCycleOutput: (cycleNumber: number, outputTitle: string) => void;
+  addCycleTask: (cycleNumber: number, task: Omit<CycleTask, 'id'>) => void;
+  toggleCycleTask: (cycleNumber: number, taskId: string) => void;
+  deleteCycleTask: (cycleNumber: number, taskId: string) => void;
+
   exportDataJSON: () => string;
   importDataJSON: (jsonStr: string) => boolean;
   resetToDefaults: () => void;
@@ -121,7 +145,16 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | null>(null);
 
-const STORAGE_KEY = 'nidham_pos_state_v1';
+const STORAGE_KEY = 'nidham_pos_state_v3';
+
+// ─── Storage Migration ──────────────────────────────────────────────────────
+// Clear any stale v1 and v2 keys so old cached data never loads.
+(function clearOldStorage() {
+  const suffixes = ['_cycles','_weeks','_today','_topics','_sessions','_projects','_outputs','_ielts_sessions','_ielts_errors','_resources'];
+  ['nidham_pos_state_v1', 'nidham_pos_state_v2'].forEach(oldKey => {
+    suffixes.forEach(s => localStorage.removeItem(`${oldKey}${s}`));
+  });
+})();
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation
@@ -137,7 +170,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Entities
   const [cycles, setCycles] = useState<CycleData[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_cycles`);
-    return saved ? JSON.parse(saved) : INITIAL_CYCLES;
+    if (!saved) return INITIAL_CYCLES;
+    try {
+      const parsed: CycleData[] = JSON.parse(saved);
+      return parsed.map((c, i) => {
+        const init = INITIAL_CYCLES[i] || {};
+        return {
+          ...init,
+          ...c,
+          coreObjectives: (c.coreObjectives && c.coreObjectives.length > 0) ? c.coreObjectives : (init.coreObjectives || []),
+          tasks: (c.tasks && c.tasks.length > 0) ? c.tasks : (init.tasks || []),
+          completedOutputs: c.completedOutputs || init.completedOutputs || []
+        };
+      });
+    } catch {
+      return INITIAL_CYCLES;
+    }
   });
 
   const [currentCycleNumber, setCurrentCycleNumber] = useState<number>(1);
@@ -147,11 +195,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_WEEKS;
   });
 
-  const [selectedWeekNumber, setSelectedWeekNumber] = useState<number>(3);
+  const [selectedWeekNumber, setSelectedWeekNumber] = useState<number>(() => {
+    // Default to the week containing today
+    const todayDayNum = getTodayDayNumber();
+    return Math.max(1, Math.ceil(todayDayNum / 7));
+  });
 
   const [today, setToday] = useState<DayData>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_today`);
-    return saved ? JSON.parse(saved) : INITIAL_TODAY;
+    if (!saved) return INITIAL_TODAY;
+    try {
+      const parsed = JSON.parse(saved);
+      return {
+        ...INITIAL_TODAY,
+        ...parsed,
+        personalAnchors: {
+          ...INITIAL_TODAY.personalAnchors,
+          ...(parsed.personalAnchors || {}),
+          faith: {
+            ...INITIAL_TODAY.personalAnchors.faith,
+            ...(parsed.personalAnchors?.faith || {}),
+            prayers: parsed.personalAnchors?.faith?.prayers || [false, false, false, false, false],
+            baqarahThirds: parsed.personalAnchors?.faith?.baqarahThirds || [false, false, false]
+          },
+          health: {
+            ...INITIAL_TODAY.personalAnchors.health,
+            ...(parsed.personalAnchors?.health || {})
+          },
+          discipline: {
+            ...INITIAL_TODAY.personalAnchors.discipline,
+            ...(parsed.personalAnchors?.discipline || {})
+          }
+        }
+      };
+    } catch {
+      return INITIAL_TODAY;
+    }
   });
 
   const [learningTopics, setLearningTopics] = useState<LearningTopic[]>(() => {
@@ -193,14 +272,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_RESOURCES;
   });
 
-  // Sync to LocalStorage
+  // User Profile
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_profile`);
+    return saved ? JSON.parse(saved) : INITIAL_PROFILE;
+  });
+
+  // Sync to LocalStorage & HTML Theme Attributes
   useEffect(() => {
     localStorage.setItem('nidham_theme', theme);
-    if (theme === 'light') {
-      document.body.classList.add('light-theme');
-    } else {
-      document.body.classList.remove('light-theme');
-    }
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.classList.toggle('dark-theme', theme === 'dark');
+    document.documentElement.classList.toggle('light-theme', theme === 'light');
+    document.body.classList.toggle('dark-theme', theme === 'dark');
+    document.body.classList.toggle('light-theme', theme === 'light');
   }, [theme]);
 
   useEffect(() => {
@@ -243,6 +328,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(`${STORAGE_KEY}_resources`, JSON.stringify(resources));
   }, [resources]);
 
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_profile`, JSON.stringify(userProfile));
+  }, [userProfile]);
+
   // Derived current models
   const currentCycle = useMemo(() => {
     return cycles.find(c => c.number === currentCycleNumber) || cycles[0];
@@ -260,7 +349,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const computedStats = useMemo(() => {
     const daysCompleted = today.dayNumber;
     const totalDays = 90;
-    const daysRemaining = totalDays - daysCompleted;
+    const daysRemaining = Math.max(0, totalDays - daysCompleted);
     const dayProgressPercent = Math.round((daysCompleted / totalDays) * 100);
 
     const cycleTotalDays = currentCycle.period.endDay - currentCycle.period.startDay + 1;
@@ -269,27 +358,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Today's execution rate
     const totalTodayCommitments = today.essentialCommitments.length;
     const completedTodayCommitments = today.essentialCommitments.filter(c => c.completed).length;
-    const todayExecutionRate = totalTodayCommitments > 0 
-      ? Math.round((completedTodayCommitments / totalTodayCommitments) * 100) 
-      : 100;
+    const todayExecutionRate = totalTodayCommitments > 0
+      ? Math.round((completedTodayCommitments / totalTodayCommitments) * 100)
+      : 0;
 
-    // Weekly execution rate
+    // Weekly execution rate (from selected week's outcomes)
     const currentWeekOutcomes = selectedWeek.outcomes;
     const completedWeekOutcomes = currentWeekOutcomes.filter(o => o.completed).length;
-    const weeklyExecutionRate = currentWeekOutcomes.length > 0 
-      ? Math.round((completedWeekOutcomes / currentWeekOutcomes.length) * 100) 
-      : 70;
+    const weeklyExecutionRate = currentWeekOutcomes.length > 0
+      ? Math.round((completedWeekOutcomes / currentWeekOutcomes.length) * 100)
+      : 0;
 
-    // IELTS consistency
-    const weeklyIeltsCount = 5;
+    // IELTS consistency — count sessions logged this week
+    const weekStartDay = (selectedWeek.weekNumber - 1) * 7 + 1;
+    const weekEndDay = weekStartDay + 6;
+    const weekStartDate = programDayToDate(weekStartDay);
+    const weekEndDate = programDayToDate(weekEndDay);
+    weekStartDate.setHours(0, 0, 0, 0);
+    weekEndDate.setHours(23, 59, 59, 999);
+    const weeklyIeltsCount = ieltsSessions.filter(s => {
+      const d = new Date(s.date);
+      return d >= weekStartDate && d <= weekEndDate;
+    }).length;
     const weeklyIeltsConsistency = Math.round((weeklyIeltsCount / 7) * 100);
 
-    // Training consistency
-    const scheduledTraining = 3;
-    const completedTraining = 2;
-    const weeklyTrainingConsistency = Math.round((completedTraining / scheduledTraining) * 100);
+    // Training consistency — use today's actual training state
+    const trainingCompleted = today.personalAnchors.health.trainingCompleted ? 1 : 0;
+    const trainingScheduled = today.personalAnchors.health.trainingScheduled ? 1 : 0;
+    const weeklyTrainingConsistency = trainingScheduled > 0
+      ? Math.round((trainingCompleted / trainingScheduled) * 100)
+      : 0;
 
-    const activeProjectProgress = activeProject?.progressPercent || 60;
+    // Project progress — computed from milestone completion
+    const activeProjectProgress = activeProject?.progressPercent || 0;
+
+    // IELTS band — average of numeric session scores this week
+    const scoredSessions = ieltsSessions
+      .filter(s => s.resultScore && !isNaN(parseFloat(String(s.resultScore))))
+      .slice(0, 5);
+    const ieltsEstimatedBand = scoredSessions.length > 0
+      ? Math.round((scoredSessions.reduce((acc, s) => acc + parseFloat(String(s.resultScore!)), 0) / scoredSessions.length) * 2) / 2
+      : 0;
 
     return {
       dayProgressPercent,
@@ -303,10 +412,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       weeklyIeltsCount,
       weeklyTrainingConsistency,
       activeProjectProgress,
-      ieltsEstimatedBand: 6.5,
+      ieltsEstimatedBand,
       ieltsTargetBand: 7.5
     };
-  }, [today, currentCycle, selectedWeek, activeProject]);
+  }, [today, currentCycle, selectedWeek, activeProject, ieltsSessions]);
 
   // Celebration helper
   const triggerCelebration = () => {
@@ -414,6 +523,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
     }));
+  };
+
+  const toggleBaqarahThird = (index: number) => {
+    setToday(prev => {
+      const currentThirds = prev.personalAnchors.faith.baqarahThirds || [false, false, false];
+      const newThirds = [...currentThirds] as [boolean, boolean, boolean];
+      newThirds[index] = !newThirds[index];
+      const allRead = newThirds.every(Boolean);
+      if (allRead && !prev.personalAnchors.faith.quranRead) {
+        triggerCelebration();
+      }
+      return {
+        ...prev,
+        personalAnchors: {
+          ...prev.personalAnchors,
+          faith: {
+            ...prev.personalAnchors.faith,
+            baqarahThirds: newThirds,
+            quranRead: allRead
+          }
+        }
+      };
+    });
+  };
+
+  const toggleAdhkar = (type: 'morning' | 'evening') => {
+    setToday(prev => {
+      const field = type === 'morning' ? 'morningAdhkar' : 'eveningAdhkar';
+      return {
+        ...prev,
+        personalAnchors: {
+          ...prev.personalAnchors,
+          faith: {
+            ...prev.personalAnchors.faith,
+            [field]: !prev.personalAnchors.faith[field]
+          }
+        }
+      };
+    });
   };
 
   const toggleTraining = () => {
@@ -652,10 +800,132 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setResources(prev => [newRes, ...prev]);
   };
 
+  const updateUserProfile = (updates: Partial<UserProfile>) => {
+    setUserProfile(prev => ({ ...prev, ...updates }));
+  };
+
+  const updateCycle = (cycleNumber: number, updates: Partial<CycleData>) => {
+    setCycles(prev => prev.map(c => c.number === cycleNumber ? { ...c, ...updates } : c));
+  };
+
+  const addCycleObjective = (cycleNumber: number, objective: string) => {
+    if (!objective.trim()) return;
+    setCycles(prev => prev.map(c => {
+      if (c.number === cycleNumber) {
+        const existing = c.coreObjectives || [];
+        return { ...c, coreObjectives: [...existing, objective.trim()] };
+      }
+      return c;
+    }));
+    triggerCelebration();
+  };
+
+  const editCycleObjective = (cycleNumber: number, index: number, newObjective: string) => {
+    if (!newObjective.trim()) return;
+    setCycles(prev => prev.map(c => {
+      if (c.number === cycleNumber) {
+        const list = [...(c.coreObjectives || [])];
+        list[index] = newObjective.trim();
+        return { ...c, coreObjectives: list };
+      }
+      return c;
+    }));
+  };
+
+  const deleteCycleObjective = (cycleNumber: number, index: number) => {
+    setCycles(prev => prev.map(c => {
+      if (c.number === cycleNumber) {
+        const list = (c.coreObjectives || []).filter((_, i) => i !== index);
+        return { ...c, coreObjectives: list };
+      }
+      return c;
+    }));
+  };
+
+  const addCycleOutput = (cycleNumber: number, output: string) => {
+    if (!output.trim()) return;
+    setCycles(prev => prev.map(c => {
+      if (c.number === cycleNumber) {
+        return { ...c, expectedOutputs: [...c.expectedOutputs, output.trim()] };
+      }
+      return c;
+    }));
+    triggerCelebration();
+  };
+
+  const toggleCycleOutput = (cycleNumber: number, outputTitle: string) => {
+    setCycles(prev => prev.map(c => {
+      if (c.number === cycleNumber) {
+        const completed = c.completedOutputs || [];
+        const isCompleted = completed.includes(outputTitle);
+        const updated = isCompleted
+          ? completed.filter(t => t !== outputTitle)
+          : [...completed, outputTitle];
+        if (!isCompleted) triggerCelebration();
+        return { ...c, completedOutputs: updated };
+      }
+      return c;
+    }));
+  };
+
+  const deleteCycleOutput = (cycleNumber: number, outputTitle: string) => {
+    setCycles(prev => prev.map(c => {
+      if (c.number === cycleNumber) {
+        return {
+          ...c,
+          expectedOutputs: c.expectedOutputs.filter(t => t !== outputTitle),
+          completedOutputs: (c.completedOutputs || []).filter(t => t !== outputTitle)
+        };
+      }
+      return c;
+    }));
+  };
+
+  const addCycleTask = (cycleNumber: number, task: Omit<CycleTask, 'id'>) => {
+    const newTask: CycleTask = {
+      ...task,
+      id: `ctask-${Date.now()}`
+    };
+    setCycles(prev => prev.map(c => {
+      if (c.number === cycleNumber) {
+        return { ...c, tasks: [...(c.tasks || []), newTask] };
+      }
+      return c;
+    }));
+    triggerCelebration();
+  };
+
+  const toggleCycleTask = (cycleNumber: number, taskId: string) => {
+    setCycles(prev => prev.map(c => {
+      if (c.number === cycleNumber) {
+        const updated = (c.tasks || []).map(t => {
+          if (t.id === taskId) {
+            const nextStatus = !t.completed;
+            if (nextStatus) triggerCelebration();
+            return { ...t, completed: nextStatus };
+          }
+          return t;
+        });
+        return { ...c, tasks: updated };
+      }
+      return c;
+    }));
+  };
+
+  const deleteCycleTask = (cycleNumber: number, taskId: string) => {
+    setCycles(prev => prev.map(c => {
+      if (c.number === cycleNumber) {
+        return { ...c, tasks: (c.tasks || []).filter(t => t.id !== taskId) };
+      }
+      return c;
+    }));
+  };
+
   const exportDataJSON = () => {
     const fullBackup = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
+      userProfile,
       cycles,
       weeks,
       today,
@@ -673,6 +943,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const importDataJSON = (jsonStr: string): boolean => {
     try {
       const data = JSON.parse(jsonStr);
+      if (data.userProfile) setUserProfile(data.userProfile);
       if (data.cycles) setCycles(data.cycles);
       if (data.weeks) setWeeks(data.weeks);
       if (data.today) setToday(data.today);
@@ -692,7 +963,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const resetToDefaults = () => {
     setCycles(INITIAL_CYCLES);
     setWeeks(INITIAL_WEEKS);
-    setToday(INITIAL_TODAY);
+    // Reset today to actual current date state
+    const todayDayNum = getTodayDayNumber();
+    const todayDate = programDayToDate(todayDayNum);
+    setToday({
+      ...INITIAL_TODAY,
+      id: `day-${todayDayNum}`,
+      dayNumber: todayDayNum,
+      weekNumber: Math.ceil(todayDayNum / 7),
+      cycleNumber: todayDayNum <= 30 ? 1 : todayDayNum <= 60 ? 2 : 3,
+      date: fmtFull(todayDate),
+      // Reset all completion states to false
+      mainObjective: { ...INITIAL_TODAY.mainObjective, completed: false },
+      essentialCommitments: INITIAL_TODAY.essentialCommitments.map(c => ({ ...c, completed: false })),
+      personalAnchors: {
+        ...INITIAL_TODAY.personalAnchors,
+        faith: { ...INITIAL_TODAY.personalAnchors.faith, prayers: [false, false, false, false, false], fajrOnTime: false, quranRead: false },
+        health: { ...INITIAL_TODAY.personalAnchors.health, trainingCompleted: false },
+      }
+    });
     setLearningTopics(INITIAL_LEARNING_TOPICS);
     setLearningSessions(INITIAL_LEARNING_SESSIONS);
     setProjects(INITIAL_PROJECTS);
@@ -700,6 +989,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIeltsSessions(INITIAL_IELTS_SESSIONS);
     setIeltsErrors(INITIAL_IELTS_ERRORS);
     setResources(INITIAL_RESOURCES);
+    setUserProfile(INITIAL_PROFILE);
     localStorage.clear();
   };
 
@@ -736,12 +1026,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         risks,
         resources,
         computedStats,
+        userProfile,
+        updateUserProfile,
+        updateCycle,
+        addCycleObjective,
+        editCycleObjective,
+        deleteCycleObjective,
+        addCycleOutput,
+        toggleCycleOutput,
+        deleteCycleOutput,
+        addCycleTask,
+        toggleCycleTask,
+        deleteCycleTask,
         toggleEssentialCommitment,
         updateCapacityMode,
         toggleMainObjective,
         togglePrayer,
         toggleFajr,
         toggleQuran,
+        toggleBaqarahThird,
+        toggleAdhkar,
         toggleTraining,
         toggleScreenTime,
         updateQuickNotes,

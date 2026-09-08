@@ -275,13 +275,24 @@ export const WeekView: React.FC = () => {
               {selectedWeek.dailySchedule.map(row => {
                 const dayClass = `day-badge-${row.dayName.toLowerCase()}`;
                 return (
-                  <tr key={row.dayNumber}>
+                  <tr
+                    key={row.dayNumber}
+                    style={row.isToday ? {
+                      background: 'var(--accent-sage-bg)',
+                      outline: '1.5px solid var(--accent-sage)',
+                      outlineOffset: '-1px',
+                      borderRadius: '6px'
+                    } : undefined}
+                  >
                     <td>
                       <span className={`badge ${dayClass}`} style={{ fontWeight: 600, minWidth: '44px', justifyContent: 'center' }}>
                         {row.dayName}
                       </span>
+                      {row.isToday && (
+                        <span style={{ fontSize: '0.68rem', color: 'var(--accent-sage)', fontWeight: 600, marginLeft: '4px' }}>Today</span>
+                      )}
                     </td>
-                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
+                    <td style={{ color: row.isToday ? 'var(--accent-sage)' : 'var(--text-secondary)', fontSize: '0.84rem', fontWeight: row.isToday ? 600 : 400 }}>
                       {row.dateStr}
                     </td>
                     <td style={{ color: 'var(--text-primary)' }}>

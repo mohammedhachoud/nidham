@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import {
   Home,
   Sun,
+  Moon,
   Calendar,
   Compass,
   BookOpen,
@@ -21,7 +22,9 @@ export const Sidebar: React.FC = () => {
     activeTab,
     setActiveTab,
     isMobileMenuOpen,
-    setMobileMenuOpen
+    setMobileMenuOpen,
+    theme,
+    toggleTheme
   } = useApp();
 
   const navItems: { tab: NavigationTab; label: string; icon: React.ReactNode }[] = [
@@ -91,6 +94,32 @@ export const Sidebar: React.FC = () => {
             </button>
           ))}
         </nav>
+
+        {/* Theme Mode Toggle in Sidebar */}
+        <div style={{ padding: '0 14px 8px' }}>
+          <button
+            className="nav-item"
+            onClick={toggleTheme}
+            style={{
+              justifyContent: 'space-between',
+              padding: '8px 12px',
+              fontSize: '0.82rem',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {theme === 'dark' ? <Sun size={15} color="var(--accent-sand)" /> : <Moon size={15} color="var(--accent-periwinkle)" />}
+              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            </div>
+            <span
+              className="badge badge-neutral"
+              style={{ fontSize: '0.68rem', padding: '2px 6px', textTransform: 'capitalize' }}
+            >
+              {theme}
+            </span>
+          </button>
+        </div>
 
         {/* Bottom Sidebar Misty Mountain Landscape Artwork */}
         <div className="sidebar-footer-art">

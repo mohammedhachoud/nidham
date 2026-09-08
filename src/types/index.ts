@@ -71,6 +71,9 @@ export interface DayData {
       prayers: [boolean, boolean, boolean, boolean, boolean]; // Fajr, Dhuhr, Asr, Maghrib, Isha
       fajrOnTime: boolean;
       quranRead: boolean;
+      baqarahThirds?: [boolean, boolean, boolean]; // [Part 1 (Ayat 1-141), Part 2 (Ayat 142-252), Part 3 (Ayat 253-286)]
+      morningAdhkar?: boolean;
+      eveningAdhkar?: boolean;
       reflection?: string;
     };
     health: {
@@ -166,6 +169,15 @@ export interface CycleReview {
   completedAt: string;
 }
 
+export interface CycleTask {
+  id: string;
+  title: string;
+  category: 'Objective' | 'Output' | 'Theme' | 'General';
+  completed: boolean;
+  targetDay?: number;
+  notes?: string;
+}
+
 export interface CycleData {
   id: string;
   number: number;
@@ -177,12 +189,24 @@ export interface CycleData {
     startDate: string;
     endDate: string;
   };
+  coreObjectives?: string[];
   majorThemes: string[];
   expectedOutputs: string[];
+  completedOutputs?: string[];
+  tasks?: CycleTask[];
   exitCriteria: string[];
   status: 'active' | 'upcoming' | 'completed';
   quote: string;
   review?: CycleReview;
+}
+
+export interface UserProfile {
+  name: string;
+  motto: string;
+  programStartDate: string;
+  ieltsTargetBand: number;
+  dailySleepTarget: number;
+  dailyScreenTimeLimit: number;
 }
 
 export interface LearningTopic {
@@ -192,7 +216,7 @@ export interface LearningTopic {
   learningObjective: string;
   depthStage: DepthStage;
   progressPercent: number;
-  lastActivityDate: string;
+  lastActivityDate?: string;
   evidenceIds: string[];
   relatedProjectId?: string;
   nextStep: string;

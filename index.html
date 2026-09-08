@@ -12,6 +12,18 @@
     <meta name="theme-color" content="#F8F8F5" />
   </head>
   <body>
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('nidham_theme') || 'light';
+          document.documentElement.setAttribute('data-theme', t);
+          if (t === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+            document.body && document.body.classList.add('dark-theme');
+          }
+        } catch(e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

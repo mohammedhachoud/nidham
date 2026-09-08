@@ -22,25 +22,49 @@ export const IELTSDashboardView: React.FC = () => {
   const {
     ieltsSessions,
     ieltsErrors,
+    today,
+    computedStats,
+    selectedWeek,
     setQuickLogOpen
   } = useApp();
 
-  const skills = [
-    { name: 'Reading', score: 6.5, fillClass: 'fill-sage', icon: <BookOpen size={14} /> },
-    { name: 'Listening', score: 6.0, fillClass: 'fill-periwinkle', icon: <Headphones size={14} /> },
-    { name: 'Writing', score: 5.5, fillClass: 'fill-rose', icon: <PenTool size={14} /> },
-    { name: 'Speaking', score: 6.0, fillClass: 'fill-sand', icon: <Mic size={14} /> }
+  // Compute per-skill average from real session data
+  const skillOrder = [
+    { name: 'Reading', fillClass: 'fill-sage', icon: <BookOpen size={14} /> },
+    { name: 'Listening', fillClass: 'fill-periwinkle', icon: <Headphones size={14} /> },
+    { name: 'Writing', fillClass: 'fill-rose', icon: <PenTool size={14} /> },
+    { name: 'Speaking', fillClass: 'fill-sand', icon: <Mic size={14} /> }
   ];
+  const skills = skillOrder.map(s => {
+    const relevant = ieltsSessions.filter(
+      sess => sess.skill === s.name && sess.resultScore && !isNaN(parseFloat(String(sess.resultScore)))
+    );
+    const avg = relevant.length > 0
+      ? Math.round((relevant.reduce((acc, sess) => acc + parseFloat(String(sess.resultScore!)), 0) / relevant.length) * 2) / 2
+      : 0;
+    return { ...s, score: avg };
+  });
 
-  const weeklySchedule = [
-    { day: 'Mon', skill: 'Listening', focus: 'Practice test' },
-    { day: 'Tue', skill: 'Reading', focus: 'Academic passage' },
-    { day: 'Wed', skill: 'Writing', focus: 'Task 1 (graphs)' },
-    { day: 'Thu', skill: 'Speaking', focus: 'Part 2 (cue card)' },
-    { day: 'Fri', skill: 'Listening', focus: 'Map & plan' },
-    { day: 'Sat', skill: 'Writing', focus: 'Task 2 (essay)' },
-    { day: 'Sun', skill: 'Reading', focus: 'Review & revision' }
-  ];
+  // Best skill label
+  const bestSkill = skills.reduce((best, s) => s.score > best.score ? s : best, skills[0]);
+
+  // Current estimate = overall average
+  const currentBand = computedStats.ieltsEstimatedBand;
+  const targetBand = computedStats.ieltsTargetBand;
+  const bandGap = Math.max(0, targetBand - currentBand);
+  const bandProgress = currentBand > 0 ? Math.round((currentBand / targetBand) * 100) : 0;
+
+  // Today's IELTS task from context
+  const todayTask = today.ieltsSession;
+
+  // Weekly schedule from selected week's dailySchedule (IELTS skill per day)
+  const weeklySchedule = selectedWeek.dailySchedule.map(day => ({
+    day: day.dayName,
+    skill: day.ieltsSkill,
+    focus: day.keyCommitments.split(' + ')[1] || day.ieltsSkill,
+    isToday: day.isToday,
+    completed: day.completed
+  }));
 
   return (
     <div className="layout-column animate-fade-in">
@@ -69,25 +93,25 @@ export const IELTSDashboardView: React.FC = () => {
               <div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Current Estimate</div>
                 <div className="font-mono" style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  6.5
+                  {currentBand > 0 ? currentBand : '—'}
                 </div>
               </div>
               <div style={{ fontSize: '1.3rem', color: 'var(--text-muted)' }}>→</div>
               <div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--accent-sage)' }}>Target Score</div>
                 <div className="font-mono" style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--accent-sage)' }}>
-                  7.5
+                  {targetBand}
                 </div>
               </div>
             </div>
 
             <div style={{ maxWidth: '380px' }}>
               <div className="progress-bar-container" style={{ height: '6px', marginBottom: '4px' }}>
-                <div className="progress-bar-fill fill-sage" style={{ width: '40%' }} />
+                <div className="progress-bar-fill fill-sage" style={{ width: `${bandProgress}%` }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-                <span>You're 1.0 bands away from your target.</span>
-                <span className="font-mono">40% of the way</span>
+                <span>{currentBand > 0 ? `You're ${bandGap} bands away from your target.` : 'Log your first session to track progress.'}</span>
+                <span className="font-mono">{bandProgress}% of the way</span>
               </div>
             </div>
           </div>
@@ -126,7 +150,7 @@ export const IELTSDashboardView: React.FC = () => {
                       {s.icon}
                       {s.name}
                     </span>
-                    <span className="font-mono" style={{ fontWeight: 600 }}>{s.score}</span>
+                    <span className="font-mono" style={{ fontWeight: 600 }}>{s.score > 0 ? s.score : '—'}</span>
                   </div>
                   <div className="progress-bar-container" style={{ height: '6px' }}>
                     <div
@@ -141,7 +165,7 @@ export const IELTSDashboardView: React.FC = () => {
 
           <div className="card-whisper-bar">
             <Leaf size={14} />
-            <span>Your strongest skill is Reading. Keep going!</span>
+            <span>{skills.every(s => s.score === 0) ? 'Log sessions to see your skill performance.' : `Your strongest skill is ${bestSkill.score > 0 ? bestSkill.name : '—'}. Keep going!`}</span>
           </div>
         </div>
 
@@ -165,14 +189,14 @@ export const IELTSDashboardView: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Headphones size={18} color="var(--accent-periwinkle)" />
                   <div>
-                    <strong style={{ fontSize: '0.92rem' }}>Listening</strong>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>Distractors</div>
+                    <strong style={{ fontSize: '0.92rem' }}>{todayTask.skill}</strong>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>{todayTask.focus}</div>
                   </div>
                 </div>
-                <span className="badge badge-neutral font-mono">45 min</span>
+                <span className="badge badge-neutral font-mono">{todayTask.durationMinutes} min</span>
               </div>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
-                Practice identifying distractors and focus on key information in the audio.
+                {todayTask.completed ? '✓ Session completed for today.' : 'Practice and focus on key information.'}
               </p>
             </div>
 
@@ -222,7 +246,7 @@ export const IELTSDashboardView: React.FC = () => {
                 }}
               >
                 <span className="font-mono" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  4 / 7
+                  {computedStats.weeklyIeltsCount} / 7
                 </span>
                 <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                   sessions
@@ -230,39 +254,37 @@ export const IELTSDashboardView: React.FC = () => {
               </div>
 
               <div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>57%</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>{computedStats.weeklyIeltsConsistency}%</div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>this week</div>
-                <p style={{ fontSize: '0.76rem', color: 'var(--accent-sage)', marginTop: '4px' }}>
-                  You're on track.<br />Keep the momentum!
+                <p style={{ fontSize: '0.76rem', color: computedStats.weeklyIeltsCount > 0 ? 'var(--accent-sage)' : 'var(--text-muted)', marginTop: '4px' }}>
+                  {computedStats.weeklyIeltsCount > 0 ? "You're on track." : 'No sessions yet.'}<br />Keep the momentum!
                 </p>
               </div>
             </div>
 
             {/* Day completion circles */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)' }}>
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => {
-                const isCompleted = idx < 4;
-                return (
-                  <div key={day} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                    <div
-                      style={{
-                        width: '18px',
-                        height: '18px',
-                        borderRadius: '50%',
-                        background: isCompleted ? 'var(--accent-sage)' : 'var(--bg-secondary)',
-                        color: isCompleted ? '#FFFFFF' : 'var(--text-muted)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.62rem'
-                      }}
-                    >
-                      {isCompleted && <Check size={10} />}
-                    </div>
-                    <span style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>{day}</span>
+              {weeklySchedule.map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: item.completed ? 'var(--accent-sage)' : item.isToday ? 'var(--accent-sage-soft)' : 'var(--bg-secondary)',
+                      color: item.completed ? '#FFFFFF' : 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.62rem',
+                      border: item.isToday ? '2px solid var(--accent-sage)' : 'none'
+                    }}
+                  >
+                    {item.completed && <Check size={10} />}
                   </div>
-                );
-              })}
+                  <span style={{ fontSize: '0.66rem', color: item.isToday ? 'var(--accent-sage)' : 'var(--text-muted)', fontWeight: item.isToday ? 700 : 400 }}>{item.day}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -329,33 +351,39 @@ export const IELTSDashboardView: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {ieltsErrors.slice(0, 4).map((err, idx) => (
-                <div key={err.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.8rem' }}>
-                  <span
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      background: 'var(--accent-rose-bg)',
-                      color: 'var(--accent-rose)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.72rem',
-                      fontWeight: 600,
-                      flexShrink: 0
-                    }}
-                  >
-                    {idx + 1}
-                  </span>
-                  <div>
-                    <strong style={{ color: 'var(--text-primary)' }}>{err.errorType}</strong>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
-                      {err.skill} • {err.reason}
+              {ieltsErrors.length === 0 ? (
+                <div style={{ padding: '16px 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  No recurring errors logged yet. Identify errors during practice sessions to target your weakest points.
+                </div>
+              ) : (
+                ieltsErrors.slice(0, 4).map((err, idx) => (
+                  <div key={err.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.8rem' }}>
+                    <span
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '50%',
+                        background: 'var(--accent-rose-bg)',
+                        color: 'var(--accent-rose)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        flexShrink: 0
+                      }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <div>
+                      <strong style={{ color: 'var(--text-primary)' }}>{err.errorType}</strong>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                        {err.skill} • {err.reason}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -385,9 +413,9 @@ export const IELTSDashboardView: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.78rem' }}>
-              {weeklySchedule.map(item => (
-                <div key={item.day} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)', width: '30px' }}>{item.day}</span>
+              {weeklySchedule.map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ color: item.isToday ? 'var(--accent-sage)' : 'var(--text-muted)', width: '30px', fontWeight: item.isToday ? 700 : 400 }}>{item.day}</span>
                   <span className="badge badge-periwinkle" style={{ fontSize: '0.7rem' }}>
                     {item.skill}
                   </span>

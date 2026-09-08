@@ -421,3 +421,59 @@
   background: var(--accent-sage-hover);
   transform: translateY(-1px);
 }
+
+/* ── View Header (used in archive, settings, resources, review) ─────────── */
+.view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.view-header-main {
+  flex: 1;
+}
+
+.view-header-main h1 {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.view-header-main p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.view-header-aside {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Button Variants ─────────────────────────────────────────────────────── */
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  border-radius: var(--radius-full);
+}
+
+.btn-outline:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+/* Icon-only button: remove padding, fixed square size */
+.btn.icon-only {
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+}

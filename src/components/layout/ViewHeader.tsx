@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Calendar, Signal, ChevronDown } from 'lucide-react';
+import { Calendar, Signal, ChevronDown, Sun, Moon } from 'lucide-react';
 import type { CapacityMode } from '../../types';
 
 interface ViewHeaderProps {
@@ -16,7 +16,7 @@ export const ViewHeader: React.FC<ViewHeaderProps> = ({
   subtitle,
   extraPill
 }) => {
-  const { today, updateCapacityMode } = useApp();
+  const { today, updateCapacityMode, theme, toggleTheme } = useApp();
   const [isCapacityOpen, setIsCapacityOpen] = React.useState(false);
 
   return (
@@ -68,7 +68,7 @@ export const ViewHeader: React.FC<ViewHeaderProps> = ({
                 top: '100%',
                 right: 0,
                 marginTop: '6px',
-                background: '#FFFFFF',
+                background: 'var(--bg-card)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: 'var(--radius-md)',
                 boxShadow: 'var(--shadow-md)',
@@ -100,6 +100,26 @@ export const ViewHeader: React.FC<ViewHeaderProps> = ({
             </div>
           )}
         </div>
+
+        {/* Global Dark / Light Theme Toggle */}
+        <button
+          className="pill-badge pill-neutral"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          style={{ cursor: 'pointer', marginTop: '18px', gap: '6px', userSelect: 'none' }}
+        >
+          {theme === 'dark' ? (
+            <>
+              <Sun size={13} color="var(--accent-sand)" />
+              <span>Light</span>
+            </>
+          ) : (
+            <>
+              <Moon size={13} color="var(--accent-periwinkle)" />
+              <span>Dark</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

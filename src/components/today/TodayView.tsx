@@ -16,7 +16,11 @@ import {
   Upload,
   Plus,
   ArrowRight,
-  Check
+  Check,
+  BookOpen,
+  Sparkles,
+  Heart,
+  Sun
 } from 'lucide-react';
 
 export const TodayView: React.FC = () => {
@@ -24,6 +28,12 @@ export const TodayView: React.FC = () => {
     today,
     toggleMainObjective,
     toggleEssentialCommitment,
+    togglePrayer,
+    toggleFajr,
+    toggleBaqarahThird,
+    toggleAdhkar,
+    toggleTraining,
+    toggleScreenTime,
     updateQuickNotes,
     completeDailyClose,
     setQuickLogOpen
@@ -209,44 +219,219 @@ export const TodayView: React.FC = () => {
           </div>
         </div>
 
-        {/* Personal Anchors Card */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <div className="card-header">
-              <span className="card-title">
-                <div className="card-title-icon">
-                  <Leaf size={14} />
-                </div>
-                Personal Anchors
-              </span>
-              <button className="card-more-btn">
-                <MoreHorizontal size={15} />
-              </button>
-            </div>
+        {/* Personal Anchors – Faith Card */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+          {/* ── Header ── */}
+          <div className="card-header" style={{ marginBottom: '10px' }}>
+            <span className="card-title">
+              <div className="card-title-icon" style={{ background: 'var(--accent-sand-bg)', color: 'var(--accent-sand)' }}>
+                <Sparkles size={14} />
+              </div>
+              Faith &amp; Anchors
+            </span>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.86rem' }}>
-              <div>
-                <strong style={{ color: 'var(--text-primary)', display: 'block' }}>Faith</strong>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  A grateful heart creates a steadier mind.
-                </span>
+          {/* ── 5 Daily Prayers ── */}
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '6px' }}>
+              Daily Prayers
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {(['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const).map((name, i) => {
+                const done = today.personalAnchors.faith.prayers[i];
+                const isFajr = i === 0;
+                return (
+                  <button
+                    key={name}
+                    onClick={() => {
+                      togglePrayer(i);
+                      if (isFajr && !done) toggleFajr();
+                    }}
+                    title={isFajr ? `${name} (tap again for on-time)` : name}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2px',
+                      padding: '6px 8px',
+                      borderRadius: 'var(--radius-md)',
+                      border: `1.5px solid ${done ? 'var(--accent-sage)' : 'var(--border-light)'}`,
+                      background: done ? 'var(--accent-sage-bg)' : 'var(--bg-input)',
+                      cursor: 'pointer',
+                      minWidth: '44px',
+                      transition: 'all 150ms ease'
+                    }}
+                  >
+                    <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>
+                      {done ? '✓' : (isFajr ? '🌙' : i === 4 ? '🌟' : '○')}
+                    </span>
+                    <span style={{
+                      fontSize: '0.65rem',
+                      fontWeight: 600,
+                      color: done ? 'var(--accent-sage)' : 'var(--text-secondary)',
+                      letterSpacing: '0.04em'
+                    }}>
+                      {name}
+                    </span>
+                    {isFajr && (
+                      <span style={{
+                        fontSize: '0.55rem',
+                        color: today.personalAnchors.faith.fajrOnTime ? 'var(--accent-sand)' : 'var(--text-muted)',
+                        fontWeight: 600
+                      }}>
+                        {today.personalAnchors.faith.fajrOnTime ? 'On-time' : ''}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Prayers progress bar */}
+            <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ flex: 1, height: '3px', background: 'var(--border-subtle)', borderRadius: '9999px', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${(today.personalAnchors.faith.prayers.filter(Boolean).length / 5) * 100}%`,
+                  background: 'var(--accent-sage)',
+                  borderRadius: '9999px',
+                  transition: 'width 400ms ease'
+                }} />
               </div>
-              <div>
-                <strong style={{ color: 'var(--text-primary)', display: 'block' }}>Health</strong>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  A healthier me fuels everything I do.
-                </span>
-              </div>
-              <div>
-                <strong style={{ color: 'var(--text-primary)', display: 'block' }}>Discipline</strong>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  Small consistent choices build the life I want.
-                </span>
-              </div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                {today.personalAnchors.faith.prayers.filter(Boolean).length}/5
+              </span>
             </div>
           </div>
 
-          <div className="card-whisper-bar">
+          {/* ── Surah Al-Baqarah ── */}
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '6px' }}>
+              Sūrat Al-Baqarah · Daily Third
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {[
+                { label: '1/3', arabic: 'آيات ١–١٤١', range: 'Āyāt 1–141' },
+                { label: '2/3', arabic: 'آيات ١٤٢–٢٥٢', range: 'Āyāt 142–252' },
+                { label: '3/3', arabic: 'آيات ٢٥٣–٢٨٦', range: 'Āyāt 253–286' }
+              ].map((part, i) => {
+                const done = (today.personalAnchors.faith.baqarahThirds || [false, false, false])[i];
+                return (
+                  <button
+                    key={i}
+                    onClick={() => toggleBaqarahThird(i)}
+                    title={part.range}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2px',
+                      padding: '7px 4px',
+                      borderRadius: 'var(--radius-md)',
+                      border: `1.5px solid ${done ? 'var(--accent-periwinkle)' : 'var(--border-light)'}`,
+                      background: done ? 'var(--accent-periwinkle-bg)' : 'var(--bg-input)',
+                      cursor: 'pointer',
+                      transition: 'all 150ms ease'
+                    }}
+                  >
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: done ? 'var(--accent-periwinkle)' : 'var(--text-secondary)' }}>
+                      {done ? '✓ ' : ''}{part.label}
+                    </span>
+                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', direction: 'rtl' }}>
+                      {part.arabic}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Adhkar ── */}
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '6px' }}>
+              Adhkar
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {[
+                { key: 'morning' as const, label: 'Morning', emoji: '🌅', done: today.personalAnchors.faith.morningAdhkar },
+                { key: 'evening' as const, label: 'Evening', emoji: '🌆', done: today.personalAnchors.faith.eveningAdhkar }
+              ].map(item => (
+                <button
+                  key={item.key}
+                  onClick={() => toggleAdhkar(item.key)}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '7px 8px',
+                    borderRadius: 'var(--radius-md)',
+                    border: `1.5px solid ${item.done ? 'var(--accent-rose)' : 'var(--border-light)'}`,
+                    background: item.done ? 'var(--accent-rose-bg)' : 'var(--bg-input)',
+                    cursor: 'pointer',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    color: item.done ? 'var(--accent-rose)' : 'var(--text-secondary)',
+                    transition: 'all 150ms ease'
+                  }}
+                >
+                  <span>{item.emoji}</span>
+                  <span>{item.done ? '✓ ' : ''}{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Health & Discipline compact ── */}
+          <div style={{ display: 'flex', gap: '6px', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)' }}>
+            <button
+              onClick={toggleTraining}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '5px',
+                padding: '6px 8px',
+                borderRadius: 'var(--radius-md)',
+                border: `1.5px solid ${today.personalAnchors.health.trainingCompleted ? 'var(--accent-sage)' : 'var(--border-light)'}`,
+                background: today.personalAnchors.health.trainingCompleted ? 'var(--accent-sage-bg)' : 'var(--bg-input)',
+                cursor: 'pointer',
+                fontSize: '0.76rem',
+                fontWeight: 600,
+                color: today.personalAnchors.health.trainingCompleted ? 'var(--accent-sage)' : 'var(--text-secondary)',
+                transition: 'all 150ms ease'
+              }}
+            >
+              <Heart size={12} />
+              <span>{today.personalAnchors.health.trainingCompleted ? '✓ ' : ''}Training</span>
+            </button>
+            <button
+              onClick={toggleScreenTime}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '5px',
+                padding: '6px 8px',
+                borderRadius: 'var(--radius-md)',
+                border: `1.5px solid ${today.personalAnchors.discipline.screenTimeBoundaryKept ? 'var(--accent-sage)' : 'var(--border-light)'}`,
+                background: today.personalAnchors.discipline.screenTimeBoundaryKept ? 'var(--accent-sage-bg)' : 'var(--bg-input)',
+                cursor: 'pointer',
+                fontSize: '0.76rem',
+                fontWeight: 600,
+                color: today.personalAnchors.discipline.screenTimeBoundaryKept ? 'var(--accent-sage)' : 'var(--text-secondary)',
+                transition: 'all 150ms ease'
+              }}
+            >
+              <Sun size={12} />
+              <span>{today.personalAnchors.discipline.screenTimeBoundaryKept ? '✓ ' : ''}Screen OK</span>
+            </button>
+          </div>
+
+          <div className="card-whisper-bar" style={{ marginTop: '10px' }}>
             <Leaf size={14} />
             <span>Rooted in what matters. Grounded for greater things.</span>
           </div>
@@ -337,7 +522,7 @@ export const TodayView: React.FC = () => {
                   type="text"
                   value={closeTomorrow}
                   onChange={e => setCloseTomorrow(e.target.value)}
-                  placeholder="Set your intention for Day 19..."
+                  placeholder={`Set your intention for Day ${today.dayNumber + 1}...`}
                   style={{ fontSize: '0.8rem', padding: '6px 10px' }}
                 />
               </div>

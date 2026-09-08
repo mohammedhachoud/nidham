@@ -65,7 +65,7 @@ export const ReviewProgressView: React.FC = () => {
               {computedStats.weeklyIeltsConsistency}%
             </div>
             <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-              IELTS (5/7) & training habits maintained over time.
+              IELTS ({computedStats.weeklyIeltsCount}/7) & training habits maintained over time.
             </p>
           </div>
 
@@ -75,7 +75,7 @@ export const ReviewProgressView: React.FC = () => {
               3. Performance
             </div>
             <div className="font-mono" style={{ fontSize: '1.8rem', fontWeight: 700, margin: '6px 0' }}>
-              6.5 → 7.5
+              {computedStats.ieltsEstimatedBand > 0 ? computedStats.ieltsEstimatedBand : '—'} → {computedStats.ieltsTargetBand}
             </div>
             <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
               IELTS mock benchmark estimate & technical validation.
@@ -147,42 +147,48 @@ export const ReviewProgressView: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {completedWeeklyReviews.map(w => (
-            <div
-              key={w.id}
-              style={{
-                padding: '16px',
-                background: 'var(--bg-tertiary)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-subtle)'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="badge badge-blue font-mono">Week {w.weekNumber}</span>
-                  <strong style={{ fontSize: '0.94rem' }}>{w.mission}</strong>
-                </div>
-                <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                  {w.review?.completedAt}
-                </span>
-              </div>
-
-              <div className="grid-2col" style={{ fontSize: '0.82rem', marginTop: '10px' }}>
-                <div>
-                  <span style={{ color: 'var(--text-muted)' }}>Executed Summary:</span>
-                  <p style={{ color: 'var(--text-primary)', marginTop: '2px' }}>{w.review?.executedSummary}</p>
-                </div>
-                <div>
-                  <span style={{ color: 'var(--text-muted)' }}>Tactical Adjustments:</span>
-                  <ul style={{ paddingLeft: '18px', color: 'var(--text-primary)', marginTop: '2px' }}>
-                    {w.review?.tacticalAdjustments.map((adj, idx) => (
-                      <li key={idx}>{adj}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+          {completedWeeklyReviews.length === 0 ? (
+            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.84rem' }}>
+              No weekly retrospective reviews completed yet. As you conclude each week, complete your Sunday review to build your archive.
             </div>
-          ))}
+          ) : (
+            completedWeeklyReviews.map(w => (
+              <div
+                key={w.id}
+                style={{
+                  padding: '16px',
+                  background: 'var(--bg-tertiary)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-subtle)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="badge badge-blue font-mono">Week {w.weekNumber}</span>
+                    <strong style={{ fontSize: '0.94rem' }}>{w.mission}</strong>
+                  </div>
+                  <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                    {w.review?.completedAt}
+                  </span>
+                </div>
+
+                <div className="grid-2col" style={{ fontSize: '0.82rem', marginTop: '10px' }}>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }}>Executed Summary:</span>
+                    <p style={{ color: 'var(--text-primary)', marginTop: '2px' }}>{w.review?.executedSummary}</p>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }}>Tactical Adjustments:</span>
+                    <ul style={{ paddingLeft: '18px', color: 'var(--text-primary)', marginTop: '2px' }}>
+                      {w.review?.tacticalAdjustments.map((adj, idx) => (
+                        <li key={idx}>{adj}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

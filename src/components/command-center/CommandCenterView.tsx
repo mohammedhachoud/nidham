@@ -22,9 +22,11 @@ export const CommandCenterView: React.FC = () => {
   const {
     today,
     outputs,
+    risks,
     setActiveTab,
     toggleMainObjective,
-    activeProject
+    activeProject,
+    computedStats
   } = useApp();
 
   return (
@@ -45,20 +47,20 @@ export const CommandCenterView: React.FC = () => {
         >
           <div className="hero-banner-overlay" />
           <div className="hero-banner-content">
-            <div className="hero-banner-caption">Cycle 1 — Reset + Foundation</div>
+            <div className="hero-banner-caption">Cycle {today.cycleNumber} — Reset + Foundation</div>
             <h2 className="hero-banner-title">Stabilize Routine & Build Foundation</h2>
             <p className="hero-banner-desc">
-              Day 18 of 90 completed. Deepening RAG engineering and consistent IELTS daily practice.
+              Day {computedStats.daysCompleted} of 90 completed. Deepening RAG engineering and consistent IELTS daily practice.
             </p>
 
             {/* Cycle Progress Bar */}
             <div style={{ maxWidth: '440px', marginBottom: '16px' }}>
               <div className="progress-bar-container" style={{ height: '7px', marginBottom: '5px' }}>
-                <div className="progress-bar-fill fill-sage" style={{ width: '20%' }} />
+                <div className="progress-bar-fill fill-sage" style={{ width: `${computedStats.dayProgressPercent}%` }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
-                <span>18 days completed • 72 days remaining</span>
-                <span className="font-mono">20%</span>
+                <span>{computedStats.daysCompleted} days completed • {computedStats.daysRemaining} days remaining</span>
+                <span className="font-mono">{computedStats.dayProgressPercent}%</span>
               </div>
             </div>
 
@@ -150,7 +152,7 @@ export const CommandCenterView: React.FC = () => {
             </div>
           </div>
           <div className="card-whisper-bar whisper-periwinkle" style={{ marginTop: '8px', padding: '4px 8px', fontSize: '0.72rem' }}>
-            <span>65% complete</span>
+            <span>{computedStats.activeProjectProgress}% complete</span>
           </div>
         </div>
 
@@ -171,9 +173,8 @@ export const CommandCenterView: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8rem' }}>
               <div><span style={{ color: 'var(--text-muted)' }}>Today: </span><strong>{today.ieltsSession.skill}</strong></div>
               <div><span style={{ color: 'var(--text-muted)' }}>Focus: </span><span>Distractors</span></div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Score: </span>
-                <span className="font-mono"><strong>6.5</strong> → <strong>7.5</strong></span>
+              <div><span style={{ color: 'var(--text-muted)' }}>Score: </span>
+                <span className="font-mono"><strong>{computedStats.ieltsEstimatedBand > 0 ? computedStats.ieltsEstimatedBand : '—'}</strong> → <strong>{computedStats.ieltsTargetBand}</strong></span>
               </div>
             </div>
           </div>
@@ -197,9 +198,9 @@ export const CommandCenterView: React.FC = () => {
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem' }}>
-              <div>✓ Training: Scheduled</div>
-              <div>☾ Sleep: 7.2h (avg)</div>
-              <div>⚡ Screen Time: On track</div>
+              <div>{today.personalAnchors.health.trainingScheduled ? '✓' : '○'} Training: {today.personalAnchors.health.trainingScheduled ? (today.personalAnchors.health.trainingCompleted ? 'Completed' : 'Scheduled') : 'Not planned'}</div>
+              <div>☾ Sleep: {today.personalAnchors.health.sleepHours}h</div>
+              <div>⚡ Screen Time: {today.personalAnchors.discipline.screenTimeBoundaryKept ? 'On track' : 'Over limit'}</div>
             </div>
           </div>
           <div className="card-whisper-bar whisper-sand" style={{ marginTop: '8px', padding: '4px 8px', fontSize: '0.72rem' }}>
@@ -266,40 +267,40 @@ export const CommandCenterView: React.FC = () => {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '2px' }}>
                   <span>Execution</span>
-                  <span className="font-mono">70%</span>
+                  <span className="font-mono">{computedStats.weeklyExecutionRate}%</span>
                 </div>
                 <div className="progress-bar-container" style={{ height: '6px' }}>
-                  <div className="progress-bar-fill fill-sage" style={{ width: '70%' }} />
+                  <div className="progress-bar-fill fill-sage" style={{ width: `${computedStats.weeklyExecutionRate}%` }} />
                 </div>
               </div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '2px' }}>
                   <span>IELTS consistency</span>
-                  <span className="font-mono">86%</span>
+                  <span className="font-mono">{computedStats.weeklyIeltsConsistency}%</span>
                 </div>
                 <div className="progress-bar-container" style={{ height: '6px' }}>
-                  <div className="progress-bar-fill fill-sage" style={{ width: '86%' }} />
+                  <div className="progress-bar-fill fill-sage" style={{ width: `${computedStats.weeklyIeltsConsistency}%` }} />
                 </div>
               </div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '2px' }}>
                   <span>Training consistency</span>
-                  <span className="font-mono">57%</span>
+                  <span className="font-mono">{computedStats.weeklyTrainingConsistency}%</span>
                 </div>
                 <div className="progress-bar-container" style={{ height: '6px' }}>
-                  <div className="progress-bar-fill fill-sand" style={{ width: '57%' }} />
+                  <div className="progress-bar-fill fill-sand" style={{ width: `${computedStats.weeklyTrainingConsistency}%` }} />
                 </div>
               </div>
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '2px' }}>
                   <span>Project progress</span>
-                  <span className="font-mono">60%</span>
+                  <span className="font-mono">{computedStats.activeProjectProgress}%</span>
                 </div>
                 <div className="progress-bar-container" style={{ height: '6px' }}>
-                  <div className="progress-bar-fill fill-periwinkle" style={{ width: '60%' }} />
+                  <div className="progress-bar-fill fill-periwinkle" style={{ width: `${computedStats.activeProjectProgress}%` }} />
                 </div>
               </div>
             </div>
@@ -317,9 +318,13 @@ export const CommandCenterView: React.FC = () => {
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.78rem', color: '#5B3737' }}>
-              <div>• IELTS Writing behind plan</div>
-              <div>• Project milestone at risk</div>
-              <div>• Sleep below target this week</div>
+              {risks.length === 0 ? (
+                <div style={{ color: 'var(--text-muted)' }}>No active risks</div>
+              ) : (
+                risks.slice(0, 3).map(risk => (
+                  <div key={risk.id}>• {risk.title}</div>
+                ))
+              )}
             </div>
           </div>
         </div>

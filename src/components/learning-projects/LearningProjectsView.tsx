@@ -29,13 +29,21 @@ export const LearningProjectsView: React.FC = () => {
   type TabType = 'overview' | 'topics' | 'projects' | 'evidence';
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
-  const tracks = [
-    { name: 'RAG / AI Engineering', progress: 80, fill: 'fill-sage' },
-    { name: 'Web Development', progress: 60, fill: 'fill-periwinkle' },
-    { name: 'Data Science', progress: 40, fill: 'fill-sand' },
-    { name: 'Automation', progress: 35, fill: 'fill-rose' },
-    { name: 'AI Agents', progress: 25, fill: 'fill-periwinkle' }
+  const trackConfigs = [
+    { name: 'RAG / AI Engineering', fill: 'fill-sage' },
+    { name: 'Web Development', fill: 'fill-periwinkle' },
+    { name: 'Data Science', fill: 'fill-sand' },
+    { name: 'Automation', fill: 'fill-rose' },
+    { name: 'AI Agents', fill: 'fill-periwinkle' }
   ];
+
+  const tracks = trackConfigs.map(tc => {
+    const matchingTopics = learningTopics.filter(t => t.track === tc.name);
+    const progress = matchingTopics.length > 0
+      ? Math.round(matchingTopics.reduce((sum, t) => sum + t.progressPercent, 0) / matchingTopics.length)
+      : 0;
+    return { ...tc, progress };
+  });
 
   const depthStages: { stage: DepthStage; icon: string; desc: string }[] = [
     { stage: 'Understand', icon: '📖', desc: 'Learn the fundamentals' },
@@ -148,7 +156,7 @@ export const LearningProjectsView: React.FC = () => {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>Target Date</span>
-                    <span className="font-mono">Apr 21, 2025</span>
+                    <span className="font-mono">{activeProject.targetDate}</span>
                   </div>
                 </div>
               </div>
@@ -232,20 +240,20 @@ export const LearningProjectsView: React.FC = () => {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', marginBottom: '4px' }}>
                   <strong>{activeProject.title}</strong>
-                  <span className="font-mono">65%</span>
+                  <span className="font-mono">{activeProject.progressPercent}%</span>
                 </div>
                 <div className="progress-bar-container" style={{ height: '6px', marginBottom: '12px' }}>
-                  <div className="progress-bar-fill fill-sage" style={{ width: '65%' }} />
+                  <div className="progress-bar-fill fill-sage" style={{ width: `${activeProject.progressPercent}%` }} />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>Next milestone</span>
-                    <span>Retrieval evaluation report</span>
+                    <span>{activeProject.nextMilestoneTitle}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>Due date</span>
-                    <span className="font-mono">Apr 21, 2025</span>
+                    <span className="font-mono">{activeProject.targetDate}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                     <span style={{ color: 'var(--text-secondary)' }}>Tags</span>
@@ -275,20 +283,26 @@ export const LearningProjectsView: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {learningSessions.slice(0, 5).map(sess => (
-                  <div key={sess.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem', paddingBottom: '6px', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <div>
-                      <strong style={{ color: 'var(--text-primary)', display: 'block' }}>{sess.topicTitle}</strong>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>{sess.purpose}</span>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>{sess.date}</span>
-                      <div className="badge badge-neutral font-mono" style={{ marginTop: '2px' }}>
-                        {sess.durationMinutes} min
+                {learningSessions.length === 0 ? (
+                  <div style={{ padding: '16px 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    No learning sessions logged yet. Log your first session to track progress.
+                  </div>
+                ) : (
+                  learningSessions.slice(0, 5).map(sess => (
+                    <div key={sess.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem', paddingBottom: '6px', borderBottom: '1px solid var(--border-subtle)' }}>
+                      <div>
+                        <strong style={{ color: 'var(--text-primary)', display: 'block' }}>{sess.topicTitle}</strong>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>{sess.purpose}</span>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <span className="font-mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>{sess.date}</span>
+                        <div className="badge badge-neutral font-mono" style={{ marginTop: '2px' }}>
+                          {sess.durationMinutes} min
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -441,20 +455,28 @@ export const LearningProjectsView: React.FC = () => {
       {/* 4. EVIDENCE TAB */}
       {activeTab === 'evidence' && (
         <div className="layout-column animate-fade-in">
-          {outputs.map(out => (
-            <div key={out.id} className="card">
-              <div className="card-header">
-                <span className="card-title">{out.title}</span>
-                <span className="badge badge-sage">{out.type}</span>
-              </div>
-              <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>{out.description}</p>
-              {out.snippet && (
-                <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
-                  {out.snippet}
-                </div>
-              )}
+          {outputs.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '36px 20px', color: 'var(--text-muted)' }}>
+              <FileText size={28} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
+              <p style={{ fontSize: '0.88rem', fontWeight: 600 }}>No evidence artifacts produced yet.</p>
+              <span style={{ fontSize: '0.78rem' }}>As you complete project milestones and evaluation reports, add them here to document your progress.</span>
             </div>
-          ))}
+          ) : (
+            outputs.map(out => (
+              <div key={out.id} className="card">
+                <div className="card-header">
+                  <span className="card-title">{out.title}</span>
+                  <span className="badge badge-sage">{out.type}</span>
+                </div>
+                <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>{out.description}</p>
+                {out.snippet && (
+                  <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
+                    {out.snippet}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>
