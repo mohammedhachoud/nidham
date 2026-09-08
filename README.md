@@ -1,4 +1,4 @@
-﻿<h1 align="center">نِظام · Nidham</h1>
+<h1 align="center">نِظام · Nidham</h1>
 
 <p align="center">
   <strong>A Better You — 90-Day Personal Operating System</strong><br/>
@@ -8,7 +8,9 @@
 <p align="center">
   <img src="https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react" alt="React 19"/>
   <img src="https://img.shields.io/badge/TypeScript-6-3178c6?style=flat-square&logo=typescript" alt="TypeScript 6"/>
+  <img src="https://img.shields.io/badge/Tauri-v2-24C8D8?style=flat-square&logo=tauri" alt="Tauri v2"/>
   <img src="https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite" alt="Vite 8"/>
+  <img src="https://img.shields.io/badge/Desktop-Windows%20x64-0078D6?style=flat-square&logo=windows" alt="Windows Desktop"/>
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License"/>
 </p>
 
@@ -17,16 +19,17 @@
 ## 📖 Table of Contents
 
 1. [What is Nidham?](#-what-is-nidham)
-2. [Core Philosophy](#-core-philosophy)
-3. [Features](#-features)
-4. [Tech Stack](#-tech-stack)
-5. [Project Structure](#-project-structure)
-6. [Getting Started](#-getting-started)
-7. [Configuration](#-configuration)
-8. [Data & Persistence](#-data--persistence)
-9. [Roadmap](#-roadmap)
-10. [Contributing](#-contributing)
-11. [License](#-license)
+2. [Desktop App & Releases](#-desktop-app--releases)
+3. [Core Philosophy](#-core-philosophy)
+4. [Features](#-features)
+5. [Tech Stack](#-tech-stack)
+6. [Project Structure](#-project-structure)
+7. [Getting Started](#-getting-started)
+8. [Configuration](#-configuration)
+9. [Data & Persistence](#-data--persistence)
+10. [Roadmap](#-roadmap)
+11. [Contributing](#-contributing)
+12. [License](#-license)
 
 ---
 
@@ -44,6 +47,35 @@ It is built for people who want to combine:
 
 Everything lives in one elegant dashboard — no subscription, no server, no tracking.
 Your data stays **100% on your device** via `localStorage`.
+
+---
+
+## 🖥️ Desktop App & Releases
+
+Nidham is available as a **native Windows desktop application** built with [Tauri v2](https://tauri.app/) and Rust. It leverages the Windows native WebView2 runtime, resulting in a lightweight installer of **just ~3.3 MB** (compared to ~150 MB for Electron equivalents) with minimal memory footprint and fast startup times.
+
+### 📦 Pre-Built Release Installers
+
+The compiled production installers are located in the local release bundle directory:
+
+📁 **Release Folder**: [`src-tauri/target/release/bundle/`](file:///c:/Users/HM/Desktop/Nidham/src-tauri/target/release/bundle/)
+
+| Format | Installer File | Size | Description |
+|--------|---------------|------|-------------|
+| **Windows Setup (`.exe`)** | [`Nidham_0.1.0_x64-setup.exe`](file:///c:/Users/HM/Desktop/Nidham/src-tauri/target/release/bundle/nsis/Nidham_0.1.0_x64-setup.exe) | **~3.3 MB** | Standard Windows NSIS installer with desktop shortcut & start menu integration |
+| **Windows MSI Package (`.msi`)** | [`Nidham_0.1.0_x64_en-US.msi`](file:///c:/Users/HM/Desktop/Nidham/src-tauri/target/release/bundle/msi/Nidham_0.1.0_x64_en-US.msi) | **~4.3 MB** | Windows Installer package (ideal for enterprise / unattended deployment) |
+
+> 💡 **Quick Run:** You can directly run [`Nidham_0.1.0_x64-setup.exe`](file:///c:/Users/HM/Desktop/Nidham/src-tauri/target/release/bundle/nsis/Nidham_0.1.0_x64-setup.exe) to install Nidham natively on Windows 10 or 11. All your data, dark mode preferences, and timers will run offline in a dedicated native desktop window.
+
+### 🔨 Desktop CLI Commands
+
+```bash
+# Run desktop app in development mode with live hot-reload:
+npm run tauri:dev
+
+# Build the release installers (.exe and .msi):
+npm run tauri:build
+```
 
 ---
 
@@ -70,10 +102,11 @@ Your data stays **100% on your device** via `localStorage`.
 - Current cycle summary at a glance
 
 ### 📅 Today View
-- **Main Objective** — single focused goal for the day with completion toggle
-- **Essential Commitments** — Faith · Technical · IELTS · Health · Discipline
-- **Technical Focus** — track, depth stage, outcome, and evidence
-- **IELTS Session** — skill, focus, duration, and result logging
+- **Interactive 90-Minute Focus Chrono** — live countdown (`01:30:00` → `00:00:00`), smooth visual progress bar, pause/resume, +5m extension, reset, and built-in offline Web Audio harmonic chimes (start, pause, and celebration bells).
+- **Today's Technical Tasks (Agenda)** — concrete execution roadmap for Day 1 (RAG retrieval evaluation, Precision@k & MRR metrics, dense vs BM25 benchmarks, failure taxonomy, and strict TypeScript contracts) mentioned clearly without tracking friction.
+- **Global Sticky Chrono Pill** — active timer stays visible in the corner across all views with pause/play and one-click navigation back to Today.
+- **Main Objective** — single focused goal for the day with automatic completion on timer finish.
+- **Essential Commitments** — Faith · Technical · IELTS · Health · Discipline with direct 90m chrono launch trigger.
 - **Faith & Anchors card** — detailed Islamic practice tracker:
   - 5 individual prayer buttons (Fajr 🌙, Dhuhr, Asr, Maghrib, Isha 🌟) with animated progress bar
   - Fajr on-time badge
@@ -137,17 +170,19 @@ Your data stays **100% on your device** via `localStorage`.
 |-------|-----------|
 | **UI Framework** | [React 19](https://react.dev/) — functional components, hooks |
 | **Language** | [TypeScript 6](https://www.typescriptlang.org/) — strict mode |
+| **Desktop Shell** | [Tauri v2](https://tauri.app/) — Rust backend, native Windows WebView2 (~3.3 MB installer) |
 | **Build Tool** | [Vite 8](https://vite.dev/) |
 | **Styling** | Vanilla CSS with a full CSS-variable design system (no Tailwind) |
+| **Audio** | Built-in Web Audio API synthesizer for calm focus chimes (100% offline, zero audio assets) |
 | **Icons** | [Lucide React](https://lucide.dev/) |
 | **Fonts** | Plus Jakarta Sans · Playfair Display · Newsreader · Caveat · JetBrains Mono (Google Fonts) |
 | **Confetti** | [canvas-confetti](https://github.com/catdad/canvas-confetti) |
 | **Linting** | [oxlint](https://oxc.rs/docs/guide/usage/linter.html) |
 | **State** | React Context API + `localStorage` persistence |
-| **Persistence** | Browser `localStorage` (key prefix `nidham_pos_state_v3`) |
-| **Deployment** | Any static host — Vercel, Netlify, GitHub Pages, Cloudflare Pages |
+| **Persistence** | Local `localStorage` (key prefix `nidham_pos_state_v3`) |
+| **Deployment** | Windows `.exe` / `.msi` desktop installer + static web hosting |
 
-> No backend. No database. No cookies. No tracking.
+> Zero server backend. No third-party analytics. No cookies. No telemetry.
 
 ---
 
@@ -156,46 +191,56 @@ Your data stays **100% on your device** via `localStorage`.
 ```
 nidham/
 ├── index.html                   # App shell · flash-fix script · Google Fonts
-├── vite.config.ts
+├── vite.config.ts               # Vite configuration (port 1420 pinned for Tauri)
 ├── tsconfig*.json
+├── src-tauri/                   # 🖥️ Tauri v2 native desktop application
+│   ├── Cargo.toml               # Rust package manifest
+│   ├── tauri.conf.json          # Window size, bundle targets, app identifier
+│   ├── build.rs                 # Tauri build hook
+│   ├── capabilities/            # Window permissions & core capabilities
+│   ├── src/                     # Rust entry points (main.rs, lib.rs)
+│   └── target/release/bundle/   # 📦 Built installers (.exe and .msi)
 ├── public/
 │   ├── favicon.svg
 │   └── images/                  # Static hero images
 └── src/
     ├── main.tsx                  # React entry point
-    ├── App.tsx                   # Root layout — sidebar + view router
+    ├── App.tsx                   # Root layout — sidebar + view router + floating chrono pill
     ├── index.css                 # Global resets
     ├── App.css                   # App-level layout classes
     │
     ├── types/
-    │   └── index.ts              # All TypeScript interfaces (DayData, CycleData, …)
+    │   └── index.ts              # All TypeScript interfaces (DayData, CycleData, FocusTimerState…)
     │
     ├── data/
     │   └── initialData.ts        # Seed data + date calculation helpers
     │
     ├── context/
-    │   └── AppContext.tsx         # Global state provider + all action handlers
+    │   └── AppContext.tsx        # Global state provider + Focus Chrono ticker + actions
+    │
+    ├── utils/
+    │   └── sound.ts              # Web Audio API chime synthesizer (offline)
     │
     ├── styles/
-    │   ├── variables.css          # CSS design tokens (colours, radii, shadows, dark theme)
-    │   ├── base.css               # Typography, card, button, layout base styles
-    │   ├── sidebar.css            # Sidebar navigation styles
-    │   └── components.css         # Shared component styles
+    │   ├── variables.css         # CSS design tokens (colours, radii, shadows, dark theme)
+    │   ├── base.css              # Typography, card, button, layout base styles
+    │   ├── sidebar.css           # Sidebar navigation styles
+    │   └── components.css        # Shared component styles & focus chrono console
     │
     └── components/
-        ├── layout/                # ViewHeader, Sidebar
-        ├── common/                # QuoteCard, shared UI atoms
-        ├── command-center/        # CommandCenterView
-        ├── today/                 # TodayView (Faith & Anchors, Daily Close…)
-        ├── week/                  # WeekView
-        ├── cycle/                 # CycleView (Manage Mode, Task Manager)
-        ├── learning-projects/     # LearningView, ProjectsView
-        ├── ielts/                 # IELTSView
-        ├── review/                # ReviewView
-        ├── resources/             # ResourcesView
-        ├── settings/              # SettingsView
-        ├── archive/               # ArchiveView
-        └── modals/                # QuickLogModal
+        ├── layout/               # ViewHeader, Sidebar
+        ├── common/               # QuoteCard, shared UI atoms
+        ├── command-center/       # CommandCenterView
+        ├── today/                # TodayView (Focus Chrono, Technical Tasks, Faith & Anchors…)
+        ├── week/                 # WeekView
+        ├── cycle/                # CycleView (Manage Mode, Task Manager)
+        ├── learning-projects/    # LearningView, ProjectsView
+        ├── ielts/                # IELTSView
+        ├── review/               # ReviewView
+        ├── resources/            # ResourcesView
+        ├── settings/             # SettingsView
+        ├── archive/              # ArchiveView
+        └── modals/               # QuickLogModal
 ```
 
 ---
@@ -206,8 +251,9 @@ nidham/
 
 - [Node.js](https://nodejs.org/) ≥ 18
 - npm ≥ 9 (ships with Node)
+- [Rust](https://www.rust-lang.org/) (optional, only required if compiling the desktop app from source)
 
-### Installation
+### Web Development Mode
 
 ```bash
 # 1. Clone the repository
@@ -221,9 +267,26 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open [http://localhost:1420](http://localhost:1420) in your browser.
 
-### Build for Production
+---
+
+### Desktop Application Mode
+
+```bash
+# Launch the native desktop window with live hot-reload:
+npm run tauri:dev
+
+# Build standalone Windows installers (.exe and .msi):
+npm run tauri:build
+```
+
+The compiled installers will be generated in:
+[`src-tauri/target/release/bundle/`](file:///c:/Users/HM/Desktop/Nidham/src-tauri/target/release/bundle/)
+
+---
+
+### Build Web for Production
 
 ```bash
 npm run build     # outputs to /dist
