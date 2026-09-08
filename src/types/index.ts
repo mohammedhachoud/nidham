@@ -99,6 +99,17 @@ export interface DayData {
   };
 }
 
+export interface FocusTimerState {
+  isActive: boolean;
+  isPaused: boolean;
+  secondsLeft: number;
+  totalSeconds: number;
+  label: string;
+  track: string;
+  soundEnabled: boolean;
+  startedAt?: string;
+}
+
 export interface WeeklyOutcome {
   id: string;
   title: string;

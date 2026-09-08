@@ -14,10 +14,28 @@ import { ReviewProgressView } from './components/review/ReviewProgressView';
 import { ResourcesView } from './components/resources/ResourcesView';
 import { ArchiveView } from './components/archive/ArchiveView';
 import { SettingsView } from './components/settings/SettingsView';
-import { Plus } from 'lucide-react';
+import { Plus, Play, Pause } from 'lucide-react';
+
+const formatMiniChrono = (totalSeconds: number) => {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
 
 const AppContent: React.FC = () => {
-  const { activeTab, isMobileViewMode, setQuickLogOpen } = useApp();
+  const {
+    activeTab,
+    setActiveTab,
+    isMobileViewMode,
+    setQuickLogOpen,
+    focusTimer,
+    pauseFocusTimer,
+    resumeFocusTimer
+  } = useApp();
 
   const renderActiveView = () => {
     switch (activeTab) {
@@ -70,6 +88,33 @@ const AppContent: React.FC = () => {
           /* Desktop Fluid Full Page */
           <div className="page-container">
             {renderActiveView()}
+          </div>
+        )}
+
+        {/* Global Floating Focus Chrono Pill */}
+        {focusTimer.isActive && (
+          <div
+            className="floating-chrono-pill animate-fade-in"
+            onClick={() => setActiveTab('today')}
+            title="Focus Session Active — Click to return to Today"
+          >
+            <span className="pulse-dot" />
+            <span className="floating-chrono-time">{formatMiniChrono(focusTimer.secondsLeft)}</span>
+            <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+              {focusTimer.isPaused ? 'Paused' : 'RAG Focus'}
+            </span>
+            <button
+              className="btn btn-icon btn-ghost"
+              style={{ width: '22px', height: '22px', padding: 0 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (focusTimer.isPaused) resumeFocusTimer();
+                else pauseFocusTimer();
+              }}
+              title={focusTimer.isPaused ? 'Resume Focus' : 'Pause Focus'}
+            >
+              {focusTimer.isPaused ? <Play size={12} fill="currentColor" /> : <Pause size={12} />}
+            </button>
           </div>
         )}
 

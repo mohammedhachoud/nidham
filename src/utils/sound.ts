@@ -1,0 +1,68 @@
+// Built-in Web Audio API synthesizer for calm, mindful focus chimes (offline, zero dependencies)
+export const playChime = (type: 'start' | 'pause' | 'resume' | 'complete' | 'tick') => {
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    if (type === 'start' || type === 'resume') {
+      // Gentle two-tone rising chime (523.25Hz -> 659.25Hz: C5 -> E5)
+      const now = ctx.currentTime;
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(523.25, now);
+      gain1.gain.setValueAtTime(0, now);
+      gain1.gain.linearRampToValueAtTime(0.15, now + 0.04);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.5);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(659.25, now + 0.12);
+      gain2.gain.setValueAtTime(0, now + 0.12);
+      gain2.gain.linearRampToValueAtTime(0.14, now + 0.16);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.12);
+      osc2.stop(now + 0.8);
+    } else if (type === 'pause') {
+      // Descending soft tone (440Hz -> 330Hz)
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(330, now + 0.2);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (type === 'complete') {
+      // Celebratory multi-harmonic Tibetan bell chime (528Hz Solfeggio + 792Hz + 1056Hz)
+      const now = ctx.currentTime;
+      [528, 792, 1056].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+        gain.gain.setValueAtTime(0, now + idx * 0.1);
+        gain.gain.linearRampToValueAtTime(0.18 / (idx + 1), now + idx * 0.1 + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0005, now + idx * 0.1 + 2.4);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.1);
+        osc.stop(now + idx * 0.1 + 2.4);
+      });
+    }
+  } catch {
+    // Audio might fail if user has not interacted with DOM yet; silent fallback
+  }
+};

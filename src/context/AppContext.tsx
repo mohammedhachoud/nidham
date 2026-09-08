@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import confetti from 'canvas-confetti';
+import { playChime } from '../utils/sound';
 import type {
   NavigationTab,
   CapacityMode,
@@ -7,6 +8,7 @@ import type {
   CycleData,
   WeekData,
   DayData,
+  FocusTimerState,
   LearningTopic,
   LearningSession,
   ProjectData,
@@ -141,6 +143,16 @@ interface AppContextType {
   importDataJSON: (jsonStr: string) => boolean;
   resetToDefaults: () => void;
   triggerCelebration: () => void;
+
+  // Focus Chrono / Timer
+  focusTimer: FocusTimerState;
+  startFocusTimer: (minutes?: number, label?: string, track?: string) => void;
+  pauseFocusTimer: () => void;
+  resumeFocusTimer: () => void;
+  resetFocusTimer: () => void;
+  addFocusTimerMinutes: (mins: number) => void;
+  toggleFocusTimerSound: () => void;
+  completeFocusTimer: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -276,6 +288,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_profile`);
     return saved ? JSON.parse(saved) : INITIAL_PROFILE;
+  });
+
+  // Focus Chrono State
+  const [focusTimer, setFocusTimer] = useState<FocusTimerState>(() => {
+    return {
+      isActive: false,
+      isPaused: false,
+      secondsLeft: 90 * 60, // 5400 seconds = 90 min
+      totalSeconds: 90 * 60,
+      label: 'RAG Evaluation — Deep Work Session',
+      track: 'RAG / AI Engineering',
+      soundEnabled: true
+    };
   });
 
   // Sync to LocalStorage & HTML Theme Attributes
@@ -429,6 +454,130 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       // Ignore if confetti fails in some environments
     }
+  };
+
+  // Focus Chrono Ticker
+  useEffect(() => {
+    if (!focusTimer.isActive || focusTimer.isPaused) return;
+
+    const interval = setInterval(() => {
+      setFocusTimer(prev => {
+        if (prev.secondsLeft <= 1) {
+          clearInterval(interval);
+          if (prev.soundEnabled) {
+            playChime('complete');
+          }
+          triggerCelebration();
+
+          // Mark technical commitment & main objective as completed
+          setToday(todayPrev => {
+            const updatedCommitments = todayPrev.essentialCommitments.map(c =>
+              c.area === 'Technical' ? { ...c, completed: true } : c
+            );
+            return {
+              ...todayPrev,
+              mainObjective: {
+                ...todayPrev.mainObjective,
+                completed: true,
+                completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              },
+              essentialCommitments: updatedCommitments
+            };
+          });
+
+          return {
+            ...prev,
+            isActive: false,
+            isPaused: false,
+            secondsLeft: 0
+          };
+        }
+
+        return {
+          ...prev,
+          secondsLeft: prev.secondsLeft - 1
+        };
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [focusTimer.isActive, focusTimer.isPaused]);
+
+  const startFocusTimer = (minutes = 90, label = 'RAG Evaluation — Deep Work Session', track = 'RAG / AI Engineering') => {
+    const totalSecs = minutes * 60;
+    setFocusTimer(prev => {
+      if (prev.soundEnabled) playChime('start');
+      return {
+        ...prev,
+        isActive: true,
+        isPaused: false,
+        secondsLeft: totalSecs,
+        totalSeconds: totalSecs,
+        label,
+        track,
+        startedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+    });
+  };
+
+  const pauseFocusTimer = () => {
+    setFocusTimer(prev => {
+      if (prev.soundEnabled) playChime('pause');
+      return { ...prev, isPaused: true };
+    });
+  };
+
+  const resumeFocusTimer = () => {
+    setFocusTimer(prev => {
+      if (prev.soundEnabled) playChime('resume');
+      return { ...prev, isPaused: false };
+    });
+  };
+
+  const resetFocusTimer = () => {
+    setFocusTimer(prev => ({
+      ...prev,
+      isActive: false,
+      isPaused: false,
+      secondsLeft: prev.totalSeconds
+    }));
+  };
+
+  const addFocusTimerMinutes = (mins: number) => {
+    setFocusTimer(prev => ({
+      ...prev,
+      secondsLeft: prev.secondsLeft + mins * 60,
+      totalSeconds: prev.totalSeconds + mins * 60
+    }));
+  };
+
+  const toggleFocusTimerSound = () => {
+    setFocusTimer(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
+  };
+
+  const completeFocusTimer = () => {
+    if (focusTimer.soundEnabled) playChime('complete');
+    triggerCelebration();
+    setToday(todayPrev => {
+      const updatedCommitments = todayPrev.essentialCommitments.map(c =>
+        c.area === 'Technical' ? { ...c, completed: true } : c
+      );
+      return {
+        ...todayPrev,
+        mainObjective: {
+          ...todayPrev.mainObjective,
+          completed: true,
+          completedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        },
+        essentialCommitments: updatedCommitments
+      };
+    });
+    setFocusTimer(prev => ({
+      ...prev,
+      isActive: false,
+      isPaused: false,
+      secondsLeft: 0
+    }));
   };
 
   // Actions
@@ -1063,7 +1212,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         exportDataJSON,
         importDataJSON,
         resetToDefaults,
-        triggerCelebration
+        triggerCelebration,
+        focusTimer,
+        startFocusTimer,
+        pauseFocusTimer,
+        resumeFocusTimer,
+        resetFocusTimer,
+        addFocusTimerMinutes,
+        toggleFocusTimerSound,
+        completeFocusTimer
       }}
     >
       {children}
