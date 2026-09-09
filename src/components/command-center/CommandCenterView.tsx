@@ -108,10 +108,10 @@ export const CommandCenterView: React.FC = () => {
               </button>
             </div>
             <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
-              {today.mainObjective.completed ? '✓ ' : ''}RAG Evaluation
+              {today.mainObjective.completed ? '✓ ' : ''}{today.mainObjective.title}
             </strong>
             <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-              Analyze retrieval failures and document key patterns.
+              {today.mainObjective.description}
             </p>
           </div>
 

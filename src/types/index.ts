@@ -90,6 +90,7 @@ export interface DayData {
     };
   };
   quickNotes: string;
+  technicalSubtasks?: { id: string; text: string; completed: boolean }[];
   dailyClose?: {
     completedMeaningful: string;
     interfered: string;
@@ -97,6 +98,18 @@ export interface DayData {
     evidenceProduced?: string;
     completedAt: string;
   };
+}
+
+export interface DaySideCompletion {
+  technicalPercent: number;
+  ieltsPercent: number;
+  faithPercent: number;
+  healthPercent: number;
+  disciplinePercent: number;
+  commitmentsPercent: number;
+  overallPercent: number;
+  completedCount: number;
+  totalCount: number;
 }
 
 export interface FocusTimerState {
@@ -128,6 +141,7 @@ export interface WeekDaySchedule {
   keyCommitments: string;
   isToday?: boolean;
   completed?: boolean;
+  completionStats?: DaySideCompletion;
 }
 
 export interface WeeklyReview {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ViewHeader } from '../layout/ViewHeader';
 import { QuoteCard } from '../common/QuoteCard';
+import { getDayCurriculum } from '../../data/dailyCurriculum';
 import {
   Target,
   Clock,
@@ -25,7 +26,8 @@ import {
   Volume2,
   VolumeX,
   Code2,
-  Terminal
+  Terminal,
+  Calendar
 } from 'lucide-react';
 
 const formatChronoTime = (totalSeconds: number) => {
@@ -59,8 +61,14 @@ export const TodayView: React.FC = () => {
     resetFocusTimer,
     addFocusTimerMinutes,
     toggleFocusTimerSound,
-    completeFocusTimer
+    completeFocusTimer,
+    toggleTechnicalSubtask,
+    realTodayDayNumber,
+    isViewingRealToday,
+    returnToRealToday
   } = useApp();
+
+  const curriculum = getDayCurriculum(today.dayNumber);
 
   const [techCardTab, setTechCardTab] = useState<'tasks' | 'context'>('tasks');
   const [closeCompleted, setCloseCompleted] = useState(today.dailyClose?.completedMeaningful || '');
@@ -89,6 +97,56 @@ export const TodayView: React.FC = () => {
         title="Today"
         subtitle="Execute with focus. Small steps create big results."
       />
+
+      {/* ── Retroactive Logging Banner if Viewing a Past Day ── */}
+      {!isViewingRealToday && (
+        <div className="card animate-fade-in" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 18px',
+          background: 'linear-gradient(135deg, rgba(254, 243, 242, 0.95), rgba(255, 255, 255, 0.98))',
+          border: '1.5px solid var(--accent-rose)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-sm)',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: 'var(--radius-full)',
+              background: 'var(--accent-rose-bg)',
+              color: 'var(--accent-rose)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Calendar size={16} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Logging for Day {today.dayNumber} · {today.date}</span>
+                <span className="badge badge-rose" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>Past Day Mode</span>
+              </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                You are logging retroactively. Check off prayers, technical tasks, and habits completed while away. All edits are saved directly to Day {today.dayNumber}'s record.
+              </div>
+            </div>
+          </div>
+
+          <button
+            className="btn btn-sage btn-sm"
+            onClick={returnToRealToday}
+            style={{ gap: '6px', fontWeight: 700, padding: '6px 14px' }}
+          >
+            <span>Return to Today (Day {realTodayDayNumber})</span>
+            <ArrowRight size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Hero Split Grid: Panoramic Lake Card (2/3) + Quote Card (1/3) */}
       <div className="hero-split-grid">
@@ -201,19 +259,19 @@ export const TodayView: React.FC = () => {
                   <Target size={14} />
                   Main Objective · Day {today.dayNumber}
                 </div>
-                <h2 className="hero-banner-title">RAG Evaluation: Benchmark &amp; Retrieval Harness</h2>
+                <h2 className="hero-banner-title">{today.mainObjective.title}</h2>
                 <p className="hero-banner-desc">
-                  Scaffold 100-query synthetic evaluation dataset, implement Context Precision@k &amp; MRR metrics, benchmark dense vs BM25 sparse retrieval, and catalog failure taxonomy.
+                  {today.mainObjective.description}
                 </p>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     <Clock size={14} color="var(--accent-sage)" />
-                    <span>~ 90 min <span style={{ color: 'var(--text-muted)' }}>Deep work focus</span></span>
+                    <span>~ {today.mainObjective.estimatedMinutes || 90} min <span style={{ color: 'var(--text-muted)' }}>Deep work focus</span></span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                     <Flag size={14} color="var(--accent-rose)" />
-                    <span>High Priority <span style={{ color: 'var(--text-muted)' }}>RAG / AI Engineering</span></span>
+                    <span>High Priority <span style={{ color: 'var(--text-muted)' }}>{today.technicalFocus.stableTrack || 'RAG / AI Engineering'}</span></span>
                   </div>
                 </div>
 
@@ -229,7 +287,7 @@ export const TodayView: React.FC = () => {
                       </button>
                       <button
                         className="btn btn-sage"
-                        onClick={() => startFocusTimer(90, 'RAG Evaluation — Deep Work Session', 'RAG / AI Engineering')}
+                        onClick={() => startFocusTimer(90, `${today.mainObjective.title} — Deep Work Session`, today.technicalFocus.stableTrack || 'RAG / AI Engineering')}
                       >
                         <Play size={13} fill="currentColor" />
                         <span>Restart 90m Chrono</span>
@@ -238,10 +296,10 @@ export const TodayView: React.FC = () => {
                   ) : (
                     <button
                       className="btn btn-sage"
-                      onClick={() => startFocusTimer(90, 'RAG Evaluation — Deep Work Session', 'RAG / AI Engineering')}
+                      onClick={() => startFocusTimer(90, `${today.mainObjective.title} — Deep Work Session`, today.technicalFocus.stableTrack || 'RAG / AI Engineering')}
                     >
                       <Play size={14} fill="currentColor" />
-                      <span>Start RAG (90 min Chrono)</span>
+                      <span>Start 90m Chrono</span>
                       <ArrowRight size={14} />
                     </button>
                   )}
@@ -400,66 +458,78 @@ export const TodayView: React.FC = () => {
             </div>
 
             {techCardTab === 'tasks' ? (
-              /* REAL TECHNICAL TASKS (Mentioned without micro-tracking) */
+              /* DYNAMIC TECHNICAL TASKS */
               <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {/* Primary Track Block */}
                 <div className="tech-task-block primary-track">
                   <div className="tech-task-block-header">
                     <span className="tech-task-title" style={{ color: 'var(--accent-sage)' }}>
-                      RAG / AI Engineering · 60 min Deep Work
+                      {curriculum.primaryTrack.title}
                     </span>
                     <span className="badge badge-sage" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
-                      Core Track
+                      {curriculum.primaryTrack.badge}
                     </span>
                   </div>
-                  <div className="tech-task-substep">
-                    <span className="tech-task-bullet">1.</span>
-                    <span>
-                      <strong>Evaluation Baseline:</strong> Construct 100 synthetic query-context test pairs with canonical chunk IDs (<span className="tech-tag">synthetic_eval.json</span>).
-                    </span>
-                  </div>
-                  <div className="tech-task-substep">
-                    <span className="tech-task-bullet">2.</span>
-                    <span>
-                      <strong>Retrieval Metrics:</strong> Implement <span className="tech-tag">Precision@k</span>, <span className="tech-tag">Recall@k</span>, and <span className="tech-tag">MRR</span> scoring scripts.
-                    </span>
-                  </div>
-                  <div className="tech-task-substep">
-                    <span className="tech-task-bullet">3.</span>
-                    <span>
-                      <strong>Dense vs BM25 Benchmark:</strong> Compare Qdrant cosine similarity against BM25 keyword matching across 256 vs 512 token chunks.
-                    </span>
-                  </div>
-                  <div className="tech-task-substep">
-                    <span className="tech-task-bullet">4.</span>
-                    <span>
-                      <strong>Failure Taxonomy:</strong> Catalog initial failure modes (out-of-domain queries, distractor hallucinations, semantic drift).
-                    </span>
-                  </div>
+                  {curriculum.primaryTrack.tasks.map((task, idx) => {
+                    const subtask = (today.technicalSubtasks || []).find(st => st.id === task.id);
+                    const isDone = subtask ? subtask.completed : false;
+                    return (
+                      <div
+                        key={task.id}
+                        className="tech-task-substep"
+                        onClick={() => toggleTechnicalSubtask(task.id)}
+                        style={{ cursor: 'pointer', opacity: isDone ? 0.6 : 1 }}
+                        title="Click to toggle completion"
+                      >
+                        <span className="tech-task-bullet" style={{ color: isDone ? 'var(--accent-sage)' : 'inherit', fontWeight: isDone ? 700 : 500 }}>
+                          {isDone ? '✓' : `${idx + 1}.`}
+                        </span>
+                        <span style={{ textDecoration: isDone ? 'line-through' : 'none' }}>
+                          <strong>{task.label}:</strong> {task.detail}
+                          {task.tag && <> (<span className="tech-tag">{task.tag}</span>)</>}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Secondary Track Block */}
                 <div className="tech-task-block rotating-track">
                   <div className="tech-task-block-header">
                     <span className="tech-task-title" style={{ color: 'var(--accent-periwinkle)' }}>
-                      Web Development · 30 min Rotating Track
+                      {curriculum.secondaryTrack.title}
                     </span>
                     <span className="badge badge-periwinkle" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
-                      React &amp; TS
+                      {curriculum.secondaryTrack.badge}
                     </span>
                   </div>
-                  <div className="tech-task-substep">
-                    <span className="tech-task-bullet">1.</span>
-                    <span>
-                      <strong>Strict Type Contracts:</strong> Define generic interfaces for query payloads, citations metadata, and streaming hooks with <span className="tech-tag">AbortController</span>.
-                    </span>
-                  </div>
+                  {curriculum.secondaryTrack.tasks.map((task, idx) => {
+                    const subtask = (today.technicalSubtasks || []).find(st => st.id === task.id);
+                    const isDone = subtask ? subtask.completed : false;
+                    return (
+                      <div
+                        key={task.id}
+                        className="tech-task-substep"
+                        onClick={() => toggleTechnicalSubtask(task.id)}
+                        style={{ cursor: 'pointer', opacity: isDone ? 0.6 : 1 }}
+                        title="Click to toggle completion"
+                      >
+                        <span className="tech-task-bullet" style={{ color: isDone ? 'var(--accent-periwinkle)' : 'inherit', fontWeight: isDone ? 700 : 500 }}>
+                          {isDone ? '✓' : `${idx + 1}.`}
+                        </span>
+                        <span style={{ textDecoration: isDone ? 'line-through' : 'none' }}>
+                          <strong>{task.label}:</strong> {task.detail}
+                          {task.tag && <> (<span className="tech-tag">{task.tag}</span>)</>}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Deliverable Callout */}
                 <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '6px 10px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Terminal size={12} color="var(--accent-sage)" />
-                  <span>Deliverable: <span className="tech-tag">benchmark_baseline.py</span> + failure report. <em>No tracking needed — execute in flow.</em></span>
+                  <span>Deliverable: <span className="tech-tag">{curriculum.deliverable.file}</span> {curriculum.deliverable.description}</span>
                 </div>
               </div>
             ) : (
@@ -483,7 +553,7 @@ export const TodayView: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>Focus Area</span>
-                  <span style={{ color: 'var(--text-primary)' }}>Distractors</span>
+                  <span style={{ color: 'var(--text-primary)' }}>{today.ieltsSession.focus}</span>
                 </div>
               </div>
             )}
@@ -515,7 +585,7 @@ export const TodayView: React.FC = () => {
               <button
                 className="btn btn-sage btn-sm"
                 style={{ width: '100%' }}
-                onClick={() => startFocusTimer(90, 'RAG Evaluation — Deep Work Session', 'RAG / AI Engineering')}
+                onClick={() => startFocusTimer(90, `${curriculum.mainObjective.title} — Deep Work Session`, today.technicalFocus.stableTrack || 'RAG / AI Engineering')}
               >
                 <Play size={12} fill="currentColor" />
                 <span>Start 90m Chrono</span>

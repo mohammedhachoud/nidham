@@ -19,13 +19,13 @@ import type {
   ResourceItem,
   WeeklyReview,
   UserProfile,
-  CycleTask
+  CycleTask,
+  DaySideCompletion
 } from '../types';
 import {
   INITIAL_PROFILE,
   INITIAL_CYCLES,
   INITIAL_WEEKS,
-  INITIAL_TODAY,
   INITIAL_LEARNING_TOPICS,
   INITIAL_LEARNING_SESSIONS,
   INITIAL_PROJECTS,
@@ -35,9 +35,12 @@ import {
   INITIAL_RISKS,
   INITIAL_RESOURCES,
   getTodayDayNumber,
-  programDayToDate,
-  fmtFull
+  programDayToDate
 } from '../data/initialData';
+import {
+  createDayDataForDay,
+  calculateDaySideCompletion
+} from '../data/dailyCurriculum';
 
 interface AppContextType {
   // Navigation & UI
@@ -64,6 +67,14 @@ interface AppContextType {
 
   today: DayData;
   setToday: React.Dispatch<React.SetStateAction<DayData>>;
+  daysHistory: Record<number, DayData>;
+  realTodayDayNumber: number;
+  isViewingRealToday: boolean;
+  returnToRealToday: () => void;
+  getDayData: (dayNumber: number) => DayData;
+  calculateDaySideCompletion: (day: DayData) => DaySideCompletion;
+  toggleTechnicalSubtask: (subtaskId: string) => void;
+  switchToDay: (dayNumber: number) => void;
 
   learningTopics: LearningTopic[];
   learningSessions: LearningSession[];
@@ -213,36 +224,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return Math.max(1, Math.ceil(todayDayNum / 7));
   });
 
-  const [today, setToday] = useState<DayData>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_today`);
-    if (!saved) return INITIAL_TODAY;
-    try {
-      const parsed = JSON.parse(saved);
-      return {
-        ...INITIAL_TODAY,
-        ...parsed,
-        personalAnchors: {
-          ...INITIAL_TODAY.personalAnchors,
-          ...(parsed.personalAnchors || {}),
-          faith: {
-            ...INITIAL_TODAY.personalAnchors.faith,
-            ...(parsed.personalAnchors?.faith || {}),
-            prayers: parsed.personalAnchors?.faith?.prayers || [false, false, false, false, false],
-            baqarahThirds: parsed.personalAnchors?.faith?.baqarahThirds || [false, false, false]
-          },
-          health: {
-            ...INITIAL_TODAY.personalAnchors.health,
-            ...(parsed.personalAnchors?.health || {})
-          },
-          discipline: {
-            ...INITIAL_TODAY.personalAnchors.discipline,
-            ...(parsed.personalAnchors?.discipline || {})
-          }
-        }
-      };
-    } catch {
-      return INITIAL_TODAY;
+  // ── Days History & Active Today Bootstrapping ──
+  const [daysHistory, setDaysHistory] = useState<Record<number, DayData>>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_days_history`);
+    let history: Record<number, DayData> = {};
+    if (saved) {
+      try { history = JSON.parse(saved); } catch { history = {}; }
     }
+    return history;
+  });
+
+  const [today, setToday] = useState<DayData>(() => {
+    const currentDayNum = getTodayDayNumber();
+    const savedTodayStr = localStorage.getItem(`${STORAGE_KEY}_today`);
+    const savedHistoryStr = localStorage.getItem(`${STORAGE_KEY}_days_history`);
+    let history: Record<number, DayData> = {};
+    if (savedHistoryStr) {
+      try { history = JSON.parse(savedHistoryStr); } catch {}
+    }
+
+    if (savedTodayStr) {
+      try {
+        const parsed: DayData = JSON.parse(savedTodayStr);
+        if (parsed.dayNumber === currentDayNum) {
+          // It's today! Merge with curriculum structure
+          const dayTemplate = createDayDataForDay(currentDayNum);
+          return {
+            ...dayTemplate,
+            ...parsed,
+            personalAnchors: {
+              ...dayTemplate.personalAnchors,
+              ...(parsed.personalAnchors || {}),
+              faith: {
+                ...dayTemplate.personalAnchors.faith,
+                ...(parsed.personalAnchors?.faith || {}),
+                prayers: parsed.personalAnchors?.faith?.prayers || [false, false, false, false, false],
+                baqarahThirds: parsed.personalAnchors?.faith?.baqarahThirds || [false, false, false]
+              },
+              health: {
+                ...dayTemplate.personalAnchors.health,
+                ...(parsed.personalAnchors?.health || {})
+              },
+              discipline: {
+                ...dayTemplate.personalAnchors.discipline,
+                ...(parsed.personalAnchors?.discipline || {})
+              }
+            }
+          };
+        } else if (parsed.dayNumber < currentDayNum) {
+          // Rollover detected! Archive yesterday into history
+          history[parsed.dayNumber] = parsed;
+          localStorage.setItem(`${STORAGE_KEY}_days_history`, JSON.stringify(history));
+
+          // Return today (from history if already created, or fresh DayData)
+          return history[currentDayNum] || createDayDataForDay(currentDayNum);
+        } else {
+          return parsed;
+        }
+      } catch {
+        return createDayDataForDay(currentDayNum);
+      }
+    }
+
+    return history[currentDayNum] || createDayDataForDay(currentDayNum);
   });
 
   const [learningTopics, setLearningTopics] = useState<LearningTopic[]>(() => {
@@ -322,7 +366,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [weeks]);
 
   useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_days_history`, JSON.stringify(daysHistory));
+  }, [daysHistory]);
+
+  useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_today`, JSON.stringify(today));
+    setDaysHistory(prev => {
+      if (prev[today.dayNumber] === today) return prev;
+      return { ...prev, [today.dayNumber]: today };
+    });
   }, [today]);
 
   useEffect(() => {
@@ -363,8 +415,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [cycles, currentCycleNumber]);
 
   const selectedWeek = useMemo(() => {
-    return weeks.find(w => w.weekNumber === selectedWeekNumber) || weeks[0];
-  }, [weeks, selectedWeekNumber]);
+    const w = weeks.find(item => item.weekNumber === selectedWeekNumber) || weeks[0];
+    const enrichedSchedule = w.dailySchedule.map(row => {
+      const isTodayRow = row.dayNumber === today.dayNumber;
+      const dayData = isTodayRow ? today : (daysHistory[row.dayNumber] || undefined);
+      const stats = dayData ? calculateDaySideCompletion(dayData) : undefined;
+      const isCompleted = dayData ? (stats ? stats.overallPercent > 0 : false) : (row.dayNumber < today.dayNumber);
+
+      return {
+        ...row,
+        isToday: isTodayRow,
+        completed: isCompleted,
+        completionStats: stats
+      };
+    });
+
+    return {
+      ...w,
+      dailySchedule: enrichedSchedule
+    };
+  }, [weeks, selectedWeekNumber, today, daysHistory]);
 
   const activeProject = useMemo(() => {
     return projects.find(p => p.id === activeProjectId) || projects[0];
@@ -1109,28 +1179,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const realTodayDayNumber = getTodayDayNumber();
+  const isViewingRealToday = today.dayNumber === realTodayDayNumber;
+
+  const returnToRealToday = () => {
+    if (today.dayNumber === realTodayDayNumber) return;
+    setDaysHistory(prev => ({ ...prev, [today.dayNumber]: today }));
+    const targetDay = daysHistory[realTodayDayNumber] || createDayDataForDay(realTodayDayNumber);
+    setToday(targetDay);
+    setSelectedWeekNumber(Math.ceil(realTodayDayNumber / 7));
+  };
+
+  const getDayData = (dayNum: number): DayData => {
+    if (dayNum === today.dayNumber) return today;
+    return daysHistory[dayNum] || createDayDataForDay(dayNum);
+  };
+
+  const toggleTechnicalSubtask = (subtaskId: string) => {
+    setToday(prev => {
+      const subtasks = prev.technicalSubtasks || [];
+      const updated = subtasks.map(st => st.id === subtaskId ? { ...st, completed: !st.completed } : st);
+      return { ...prev, technicalSubtasks: updated };
+    });
+  };
+
+  const switchToDay = (dayNum: number) => {
+    if (dayNum === today.dayNumber) return;
+    setDaysHistory(prev => ({ ...prev, [today.dayNumber]: today }));
+    const targetDay = daysHistory[dayNum] || createDayDataForDay(dayNum);
+    setToday(targetDay);
+    setSelectedWeekNumber(Math.ceil(dayNum / 7));
+  };
+
   const resetToDefaults = () => {
     setCycles(INITIAL_CYCLES);
     setWeeks(INITIAL_WEEKS);
-    // Reset today to actual current date state
     const todayDayNum = getTodayDayNumber();
-    const todayDate = programDayToDate(todayDayNum);
-    setToday({
-      ...INITIAL_TODAY,
-      id: `day-${todayDayNum}`,
-      dayNumber: todayDayNum,
-      weekNumber: Math.ceil(todayDayNum / 7),
-      cycleNumber: todayDayNum <= 30 ? 1 : todayDayNum <= 60 ? 2 : 3,
-      date: fmtFull(todayDate),
-      // Reset all completion states to false
-      mainObjective: { ...INITIAL_TODAY.mainObjective, completed: false },
-      essentialCommitments: INITIAL_TODAY.essentialCommitments.map(c => ({ ...c, completed: false })),
-      personalAnchors: {
-        ...INITIAL_TODAY.personalAnchors,
-        faith: { ...INITIAL_TODAY.personalAnchors.faith, prayers: [false, false, false, false, false], fajrOnTime: false, quranRead: false },
-        health: { ...INITIAL_TODAY.personalAnchors.health, trainingCompleted: false },
-      }
-    });
+    setToday(createDayDataForDay(todayDayNum));
+    setDaysHistory({});
     setLearningTopics(INITIAL_LEARNING_TOPICS);
     setLearningSessions(INITIAL_LEARNING_SESSIONS);
     setProjects(INITIAL_PROJECTS);
@@ -1164,6 +1250,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedWeekNumber,
         today,
         setToday,
+        daysHistory,
+        realTodayDayNumber,
+        isViewingRealToday,
+        returnToRealToday,
+        getDayData,
+        calculateDaySideCompletion,
+        toggleTechnicalSubtask,
+        switchToDay,
         learningTopics,
         learningSessions,
         projects,
